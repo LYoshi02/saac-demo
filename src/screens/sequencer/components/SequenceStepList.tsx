@@ -3,12 +3,10 @@ import type { SequenceStep } from "../types";
 
 export interface SequenceStepListProps {
   steps: SequenceStep[];
-  lastViewedStepIndex: number | null;
   onMoveStep: (fromIndex: number, toIndex: number) => void;
   onUpdateStepText: (stepId: string, text: string) => void;
   onRequestChangePictogram: (stepId: string) => void;
   onRemoveStep: (stepId: string) => void;
-  onRequestAddStep: () => void;
 }
 
 /**
@@ -17,12 +15,10 @@ export interface SequenceStepListProps {
  */
 export default function SequenceStepList({
   steps,
-  lastViewedStepIndex,
   onMoveStep,
   onUpdateStepText,
   onRequestChangePictogram,
-  onRemoveStep,
-  onRequestAddStep
+  onRemoveStep
 }: SequenceStepListProps) {
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
   const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
@@ -62,20 +58,13 @@ export default function SequenceStepList({
 
   if (steps.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center gap-4 rounded-3xl border-2 border-dashed border-violet-300 bg-white p-10 text-center">
+      <div className="flex flex-col items-center justify-center gap-3 rounded-3xl border-2 border-dashed border-violet-300 bg-white p-10 text-center">
         <p className="text-xl font-bold text-slate-900">
           Todavía no agregaste pasos a esta secuencia
         </p>
         <p className="max-w-md text-base text-slate-600">
           Agregá al menos 2 pasos con sus pictogramas para armar la rutina y poder mostrarla paso a paso.
         </p>
-        <button
-          type="button"
-          onClick={onRequestAddStep}
-          className="min-h-[52px] rounded-2xl bg-violet-600 px-6 py-3 text-base font-bold text-white shadow-sm transition hover:bg-violet-700 focus:outline-none focus-visible:ring-4 focus-visible:ring-violet-300"
-        >
-          + Agregar primer paso
-        </button>
       </div>
     );
   }
@@ -92,7 +81,6 @@ export default function SequenceStepList({
           const isLast = index === steps.length - 1;
           const isDragging = draggedIndex === index;
           const isDragOver = dragOverIndex === index && draggedIndex !== index;
-          const isLastViewed = lastViewedStepIndex === index;
 
           return (
             <li
@@ -111,25 +99,17 @@ export default function SequenceStepList({
               }`}
             >
               {/* Número de paso e indicador de arrastre */}
-              <div className="flex items-center justify-between gap-3 sm:flex-col sm:justify-center">
-                <div className="flex items-center gap-2">
-                  <span
-                    aria-hidden="true"
-                    title="Arrastrá para cambiar el orden"
-                    className="cursor-grab select-none px-1 text-xl font-bold text-slate-400 active:cursor-grabbing"
-                  >
-                    ⋮⋮
-                  </span>
-                  <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-violet-100 text-lg font-extrabold text-violet-900">
-                    {index + 1}
-                  </span>
-                </div>
-
-                {isLastViewed && (
-                  <span className="rounded-full bg-amber-100 px-3 py-1 text-xs font-bold text-amber-900">
-                    Último visto
-                  </span>
-                )}
+              <div className="flex items-center gap-2">
+                <span
+                  aria-hidden="true"
+                  title="Arrastrá para cambiar el orden"
+                  className="cursor-grab select-none px-1 text-xl font-bold text-slate-400 active:cursor-grabbing"
+                >
+                  ⋮⋮
+                </span>
+                <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-violet-100 text-lg font-extrabold text-violet-900">
+                  {index + 1}
+                </span>
               </div>
 
               {/* Pictograma del paso con botón para cambiarlo */}

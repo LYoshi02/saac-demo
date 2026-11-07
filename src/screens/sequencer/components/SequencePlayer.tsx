@@ -198,7 +198,7 @@ export default function SequencePlayer({
               type="button"
               onClick={onPrev}
               disabled={isFirstStep}
-              className="min-h-[68px] flex-1 rounded-3xl border-2 border-slate-300 bg-white px-6 py-4 text-xl font-extrabold text-slate-800 shadow-sm transition hover:bg-slate-100 focus:outline-none focus-visible:ring-4 focus-visible:ring-violet-300 active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-40 sm:max-w-xs"
+              className="min-h-[68px] flex-1 rounded-3xl border-2 border-slate-300 bg-white px-6 py-4 text-xl font-extrabold text-slate-800 shadow-sm transition hover:bg-slate-100 focus:outline-none focus-visible:ring-4 focus-visible:ring-violet-300 active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-40"
             >
               ← Anterior
             </button>
@@ -206,7 +206,7 @@ export default function SequencePlayer({
             <button
               type="button"
               onClick={onNext}
-              className="min-h-[68px] flex-[2] rounded-3xl bg-violet-600 px-8 py-4 text-2xl font-extrabold text-white shadow-md transition hover:bg-violet-700 focus:outline-none focus-visible:ring-4 focus-visible:ring-violet-300 active:scale-[0.99]"
+              className="min-h-[68px] flex-1 rounded-3xl bg-violet-600 px-6 py-4 text-xl font-extrabold text-white shadow-md transition hover:bg-violet-700 focus:outline-none focus-visible:ring-4 focus-visible:ring-violet-300 active:scale-[0.99]"
             >
               {isLastStep ? "¡Terminar! ✓" : "Siguiente →"}
             </button>

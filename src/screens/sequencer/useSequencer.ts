@@ -349,7 +349,7 @@ export function useSequencer() {
 
   /** Carga una secuencia guardada en el editor (y opcionalmente inicia su ejecución). */
   const loadSavedSequence = useCallback(
-    (sequenceId: string, executeImmediately = false) => {
+    (sequenceId: string, executeImmediately = false, resumeFromSavedStep = true) => {
       const target = savedSequences.find((seq) => seq.id === sequenceId);
       if (!target) {
         return;
@@ -364,6 +364,7 @@ export function useSequencer() {
 
       if (executeImmediately && target.steps.length >= 2) {
         const resumeIndex =
+          resumeFromSavedStep &&
           target.lastViewedStepIndex !== null &&
           target.lastViewedStepIndex >= 0 &&
           target.lastViewedStepIndex < target.steps.length

@@ -11,10 +11,12 @@ interface SequencerScreenProps {
   onBack: () => void;
 }
 
+type SequencerView = "list" | "editor";
+
 /**
  * Módulo Secuenciador de rutinas (HU-07, HU-08 y HU-09 / CU-06, CU-07 y CU-08).
- * Permite armar secuencias de pasos con pictogramas reordenables, guardarlas con nombre único
- * y ejecutarlas paso a paso a pantalla completa conservando el último paso visto al salir.
+ * - Vista "list": Muestra únicamente el listado de secuencias guardadas y el botón para crear una nueva.
+ * - Vista "editor": Pantalla dedicada a la creación y edición de pasos de una secuencia.
  */
 export default function SequencerScreen({ onBack }: SequencerScreenProps) {
   const sequenceNameInputId = useId();
@@ -22,7 +24,6 @@ export default function SequencerScreen({ onBack }: SequencerScreenProps) {
     draft,
     savedSequences,
     canExecute,
-    hasResumePoint,
     isPlaying,
     currentStepIndex,
     isCompleted,
@@ -42,6 +43,9 @@ export default function SequencerScreen({ onBack }: SequencerScreenProps) {
     exitExecution
   } = useSequencer();
 
+  // Navegación interna entre la pantalla de listado y la pantalla de creación/edición
+  const [view, setView] = useState<SequencerView>("list");
+
   // Estado del selector de pictogramas (para agregar un nuevo paso o cambiar el de un paso existente)
   const [isPickerOpen, setIsPickerOpen] = useState<boolean>(false);
   const [editingStepId, setEditingStepId] = useState<string | null>(null);
@@ -51,6 +55,23 @@ export default function SequencerScreen({ onBack }: SequencerScreenProps) {
     type: "success" | "error";
     message: string;
   } | null>(null);
+
+  const handleGoToCreateNew = () => {
+    startNewSequence();
+    setSaveFeedback(null);
+    setView("editor");
+  };
+
+  const handleGoToEditSaved = (sequenceId: string) => {
+    loadSavedSequence(sequenceId, false);
+    setSaveFeedback(null);
+    setView("editor");
+  };
+
+  const handleBackToList = () => {
+    setSaveFeedback(null);
+    setView("list");
+  };
 
   const handleOpenPickerForNewStep = () => {
     setEditingStepId(null);
@@ -87,55 +108,55 @@ export default function SequencerScreen({ onBack }: SequencerScreenProps) {
     });
   };
 
-  const handleStartNewSequence = () => {
-    startNewSequence();
-    setSaveFeedback(null);
-  };
-
   const currentlyEditingStep = editingStepId
     ? draft.steps.find((step) => step.id === editingStepId) ?? null
     : null;
 
   return (
-    <ScreenLayout title="Secuenciador" onBack={onBack}>
-      <div className="flex flex-col gap-8">
-        {/* Panel de secuencias guardadas para reutilizar en otras sesiones (HU-09 / CU-08) */}
+    <ScreenLayout
+      title={
+        view === "list"
+          ? "Secuenciador"
+          : draft.savedId
+            ? "Editar secuencia"
+            : "Nueva secuencia"
+      }
+      onBack={view === "list" ? onBack : handleBackToList}
+    >
+      {view === "list" ? (
+        /* Pantalla 1: Solo listado de secuencias guardadas + botón para crear una nueva */
         <SavedSequencesPanel
           savedSequences={savedSequences}
-          activeSavedId={draft.savedId}
-          onSelectToEdit={(id) => {
-            loadSavedSequence(id, false);
-            setSaveFeedback(null);
-          }}
-          onSelectToExecute={(id) => {
-            loadSavedSequence(id, true);
-            setSaveFeedback(null);
+          onCreateNew={handleGoToCreateNew}
+          onSelectToEdit={handleGoToEditSaved}
+          onSelectToExecute={(id, resumeFromSavedStep) => {
+            loadSavedSequence(id, true, resumeFromSavedStep);
           }}
           onDelete={deleteSavedSequence}
         />
-
-        {/* Panel principal de edición y ejecución de la secuencia activa (HU-07, HU-08 y HU-09) */}
+      ) : (
+        /* Pantalla 2: Creación y edición de secuencias */
         <section
-          aria-label="Editor de secuencia actual"
+          aria-label="Editor de secuencia"
           className="flex flex-col gap-6 rounded-3xl border-2 border-violet-200 bg-white p-5 shadow-sm sm:p-7"
         >
-          {/* Encabezado del editor: título y botón "Nueva secuencia" */}
+          {/* Encabezado del editor con retorno al listado de secuencias guardadas */}
           <div className="flex flex-wrap items-center justify-between gap-4 border-b border-slate-200 pb-4">
             <div>
               <h2 className="text-2xl font-extrabold text-slate-900">
                 {draft.savedId ? "Editando secuencia" : "Nueva secuencia de pasos"}
               </h2>
               <p className="text-sm text-slate-600">
-                Armá los pasos de la rutina con pictogramas y mostralos a pantalla completa.
+                Armá los pasos de la rutina con pictogramas, ordenalos y guardá la secuencia.
               </p>
             </div>
 
             <button
               type="button"
-              onClick={handleStartNewSequence}
-              className="min-h-[48px] rounded-2xl border-2 border-violet-300 bg-violet-50 px-4 py-2 text-base font-bold text-violet-900 transition hover:bg-violet-100 focus:outline-none focus-visible:ring-4 focus-visible:ring-violet-300"
+              onClick={handleBackToList}
+              className="min-h-[48px] rounded-2xl border-2 border-slate-300 bg-white px-4 py-2 text-base font-bold text-slate-800 transition hover:bg-slate-100 focus:outline-none focus-visible:ring-4 focus-visible:ring-violet-300"
             >
-              + Nueva secuencia en blanco
+              ← Volver a mis secuencias
             </button>
           </div>
 
@@ -171,81 +192,52 @@ export default function SequencerScreen({ onBack }: SequencerScreenProps) {
             {saveFeedback && (
               <div
                 role={saveFeedback.type === "error" ? "alert" : "status"}
-                className={`mt-1 rounded-2xl border-2 px-4 py-2.5 text-sm font-bold ${
+                className={`mt-1 flex flex-wrap items-center justify-between gap-2 rounded-2xl border-2 px-4 py-2.5 text-sm font-bold ${
                   saveFeedback.type === "error"
                     ? "border-red-300 bg-red-50 text-red-900"
                     : "border-emerald-300 bg-emerald-50 text-emerald-900"
                 }`}
               >
-                {saveFeedback.message}
+                <span>{saveFeedback.message}</span>
+                {saveFeedback.type === "success" && (
+                  <button
+                    type="button"
+                    onClick={handleBackToList}
+                    className="underline hover:text-emerald-950"
+                  >
+                    Ver en mis secuencias →
+                  </button>
+                )}
               </div>
             )}
           </div>
 
-          {/* Barra de acciones: Agregar paso y Ejecutar (con validación de mínimo 2 pasos de HU-07) */}
-          <div className="flex flex-col gap-3 rounded-2xl border-2 border-slate-200 bg-slate-50 p-4 sm:flex-row sm:items-center sm:justify-between">
-            <div className="flex flex-wrap items-center gap-3">
-              <button
-                type="button"
-                onClick={handleOpenPickerForNewStep}
-                className="min-h-[52px] rounded-2xl bg-violet-600 px-5 py-2.5 text-base font-extrabold text-white shadow-sm transition hover:bg-violet-700 focus:outline-none focus-visible:ring-4 focus-visible:ring-violet-300"
-              >
-                + Agregar paso con pictograma
-              </button>
-
-              <span className="text-sm font-bold text-slate-700">
-                Total: {draft.steps.length}{" "}
-                {draft.steps.length === 1 ? "paso" : "pasos"}
-              </span>
-            </div>
-
-            <div className="flex flex-wrap items-center gap-3">
-              {hasResumePoint && canExecute && (
-                <button
-                  type="button"
-                  onClick={() => startExecution(true)}
-                  className="min-h-[52px] rounded-2xl border-2 border-amber-500 bg-amber-50 px-5 py-2.5 text-base font-extrabold text-amber-900 transition hover:bg-amber-100 focus:outline-none focus-visible:ring-4 focus-visible:ring-amber-300"
-                >
-                  ▶ Retomar en paso {(draft.lastViewedStepIndex ?? 0) + 1}
-                </button>
-              )}
-
-              <button
-                type="button"
-                onClick={() => startExecution(false)}
-                disabled={!canExecute}
-                className="min-h-[52px] rounded-2xl bg-emerald-600 px-6 py-2.5 text-base font-extrabold text-white shadow-sm transition hover:bg-emerald-700 focus:outline-none focus-visible:ring-4 focus-visible:ring-emerald-300 disabled:cursor-not-allowed disabled:bg-slate-300 disabled:text-slate-600"
-              >
-                {hasResumePoint ? "▶ Ejecutar desde el inicio" : "▶ Ejecutar secuencia"}
-              </button>
-            </div>
-          </div>
-
-          {/* Aviso de restricción cuando hay menos de 2 pasos (HU-07 / CU-06 excepción 4a) */}
-          {!canExecute && (
-            <div
-              role="status"
-              className="rounded-2xl border-2 border-amber-300 bg-amber-50 px-4 py-3 text-sm font-bold text-amber-900"
+          {/* Barra de acciones: Agregar paso y contador de pasos */}
+          <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border-2 border-slate-200 bg-slate-50 p-4">
+            <button
+              type="button"
+              onClick={handleOpenPickerForNewStep}
+              className="min-h-[52px] rounded-2xl bg-violet-600 px-5 py-2.5 text-base font-extrabold text-white shadow-sm transition hover:bg-violet-700 focus:outline-none focus-visible:ring-4 focus-visible:ring-violet-300"
             >
-              Para ejecutar la secuencia se necesitan al menos 2 pasos (actualmente hay{" "}
-              {draft.steps.length}). Agregá{" "}
-              {2 - draft.steps.length === 1 ? "1 paso más" : "al menos 2 pasos"} con el
-              botón «+ Agregar paso con pictograma».
-            </div>
-          )}
+              + Agregar paso con pictograma
+            </button>
+
+            <span className="text-sm font-bold text-slate-700">
+              Total: {draft.steps.length}{" "}
+              {draft.steps.length === 1 ? "paso" : "pasos"}
+            </span>
+          </div>
 
           {/* Lista reordenable de pasos (HU-07) */}
           <SequenceStepList
             steps={draft.steps}
-            lastViewedStepIndex={draft.lastViewedStepIndex}
             onMoveStep={moveStep}
             onUpdateStepText={updateStepText}
             onRequestChangePictogram={handleOpenPickerForExistingStep}
             onRemoveStep={removeStep}
-            onRequestAddStep={handleOpenPickerForNewStep}
           />
         </section>
-      </div>
+      )}
 
       {/* Modal reutilizable de búsqueda de pictogramas en ARASAAC (HU-10) */}
       <PictogramPickerModal
