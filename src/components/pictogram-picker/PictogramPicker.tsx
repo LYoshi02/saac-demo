@@ -222,7 +222,7 @@ export default function PictogramPicker({
           role="status"
           className="rounded-2xl border-2 border-amber-300 bg-amber-50 px-4 py-3 text-sm font-medium text-amber-900"
         >
-          Sin conexión con el servidor de ARASAAC. Mostrando pictogramas guardados en la biblioteca local.
+          Sin conexión con el servidor. Mostrando pictogramas guardados en la biblioteca local.
         </div>
       )}
 
@@ -345,23 +345,6 @@ export default function PictogramPicker({
           })}
         </div>
       )}
-
-      {/* Pie de atribución legal requerida por ARASAAC */}
-      <footer className="flex flex-wrap items-center justify-between gap-2 border-t border-slate-200 pt-3 text-xs text-slate-600">
-        <span>
-          Símbolos pictográficos de{" "}
-          <a
-            href="https://arasaac.org"
-            target="_blank"
-            rel="noreferrer"
-            className="font-semibold text-slate-800 underline"
-          >
-            ARASAAC
-          </a>{" "}
-          (Gobierno de Aragón) – Licencia CC BY-NC-SA.
-        </span>
-        <span>Mostrando {pictograms.length} pictogramas</span>
-      </footer>
     </section>
   );
 }
