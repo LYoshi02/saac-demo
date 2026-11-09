@@ -79,7 +79,7 @@ export default function SequencePlayer({
                 ? "Secuencia completada"
                 : `Paso ${currentStepIndex + 1} de ${steps.length}`
             }
-            className="flex items-center gap-2"
+            className="flex flex-wrap items-center gap-1.5 sm:gap-2"
           >
             {steps.map((step, idx) => {
               const isDone = isCompleted || idx < currentStepIndex;
@@ -111,15 +111,15 @@ export default function SequencePlayer({
       </header>
 
       {/* Contenido central a pantalla completa */}
-      <main className="mx-auto flex w-full max-w-4xl flex-1 flex-col items-center justify-center overflow-y-auto px-4 py-6 sm:px-6">
+      <main className="mx-auto flex w-full max-w-4xl flex-1 flex-col items-center overflow-y-auto px-4 py-4 sm:px-6 sm:py-6">
         {!isCompleted && currentStep ? (
-          <div className="flex w-full flex-col items-center gap-6 rounded-3xl border-4 border-violet-200 bg-white p-6 text-center shadow-md sm:p-10">
+          <div className="my-auto flex w-full flex-col items-center gap-5 rounded-3xl border-4 border-violet-200 bg-white p-5 text-center shadow-md sm:gap-6 sm:p-10">
             <span className="rounded-full bg-violet-100 px-5 py-1.5 text-base font-extrabold text-violet-900">
               Paso {currentStepIndex + 1} de {steps.length}
             </span>
 
             {/* Pictograma principal de gran tamaño */}
-            <div className="flex h-64 w-64 items-center justify-center rounded-3xl border-2 border-slate-100 bg-white p-4 sm:h-80 sm:w-80">
+            <div className="flex h-56 w-56 items-center justify-center rounded-3xl border-2 border-slate-100 bg-white p-4 sm:h-80 sm:w-80">
               <img
                 src={currentStep.pictogram.imageUrl}
                 alt={currentStep.text || currentStep.pictogram.label}
@@ -128,52 +128,52 @@ export default function SequencePlayer({
             </div>
 
             {/* Texto del paso con alto contraste */}
-            <p className="text-3xl font-extrabold tracking-tight text-slate-900 sm:text-4xl">
+            <p className="text-2xl font-extrabold tracking-tight text-slate-900 sm:text-4xl">
               {currentStep.text || currentStep.pictogram.label}
             </p>
           </div>
         ) : (
           /* Pantalla de cierre al completar todos los pasos (HU-08 / CU-07 paso 5) */
-          <div className="flex w-full flex-col items-center gap-6 rounded-3xl border-4 border-emerald-300 bg-white p-8 text-center shadow-md sm:p-12">
-            <div className="flex h-24 w-24 items-center justify-center rounded-full bg-emerald-100 text-5xl font-extrabold text-emerald-700">
+          <div className="my-auto flex w-full flex-col items-center gap-4 rounded-3xl border-4 border-emerald-300 bg-white p-5 text-center shadow-md sm:gap-6 sm:p-10">
+            <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-full bg-emerald-100 text-3xl font-extrabold text-emerald-700 sm:h-24 sm:w-24 sm:text-5xl">
               ✓
             </div>
 
-            <h3 className="text-3xl font-extrabold text-slate-900 sm:text-4xl">
+            <h3 className="text-2xl font-extrabold text-slate-900 sm:text-4xl">
               ¡Muy bien! Terminaste la rutina
             </h3>
 
-            <p className="max-w-lg text-lg font-medium text-slate-700">
+            <p className="max-w-lg text-base font-medium text-slate-700 sm:text-lg">
               Completaste todos los pasos de{" "}
               <span className="font-bold text-slate-900">«{displayTitle}»</span>.
             </p>
 
             {/* Resumen visual de los pasos completados */}
-            <div className="grid w-full grid-cols-2 gap-3 sm:grid-cols-4">
+            <div className="grid w-full grid-cols-2 gap-2.5 sm:grid-cols-4 sm:gap-3">
               {steps.map((step, index) => (
                 <div
                   key={step.id}
-                  className="flex flex-col items-center gap-2 rounded-2xl border-2 border-emerald-200 bg-emerald-50/60 p-3"
+                  className="flex flex-col items-center gap-2 rounded-2xl border-2 border-emerald-200 bg-emerald-50/60 p-2.5 sm:p-3"
                 >
-                  <div className="flex h-20 w-20 items-center justify-center rounded-xl bg-white p-1.5">
+                  <div className="flex h-16 w-16 items-center justify-center rounded-xl bg-white p-1.5 sm:h-20 sm:w-20">
                     <img
                       src={step.pictogram.imageUrl}
                       alt={step.text}
                       className="h-full w-full object-contain"
                     />
                   </div>
-                  <span className="line-clamp-2 text-sm font-bold text-slate-900">
+                  <span className="line-clamp-2 text-xs font-bold text-slate-900 sm:text-sm">
                     {index + 1}. {step.text}
                   </span>
                 </div>
               ))}
             </div>
 
-            <div className="mt-2 flex flex-wrap items-center justify-center gap-4">
+            <div className="mt-1 flex w-full flex-col items-stretch justify-center gap-3 sm:mt-2 sm:w-auto sm:flex-row sm:items-center sm:gap-4">
               <button
                 type="button"
                 onClick={onRestart}
-                className="min-h-[60px] rounded-3xl border-2 border-violet-600 bg-white px-7 py-3.5 text-lg font-extrabold text-violet-800 transition hover:bg-violet-50 focus:outline-none focus-visible:ring-4 focus-visible:ring-violet-300"
+                className="min-h-[54px] w-full rounded-2xl border-2 border-violet-600 bg-white px-6 py-3 text-base font-extrabold text-violet-800 transition hover:bg-violet-50 focus:outline-none focus-visible:ring-4 focus-visible:ring-violet-300 sm:min-h-[60px] sm:w-auto sm:rounded-3xl sm:px-7 sm:py-3.5 sm:text-lg"
               >
                 ↻ Repetir secuencia
               </button>
@@ -181,7 +181,7 @@ export default function SequencePlayer({
               <button
                 type="button"
                 onClick={onExit}
-                className="min-h-[60px] rounded-3xl bg-emerald-600 px-8 py-3.5 text-lg font-extrabold text-white shadow-md transition hover:bg-emerald-700 focus:outline-none focus-visible:ring-4 focus-visible:ring-emerald-300"
+                className="min-h-[54px] w-full rounded-2xl bg-emerald-600 px-6 py-3 text-base font-extrabold text-white shadow-md transition hover:bg-emerald-700 focus:outline-none focus-visible:ring-4 focus-visible:ring-emerald-300 sm:min-h-[60px] sm:w-auto sm:rounded-3xl sm:px-8 sm:py-3.5 sm:text-lg"
               >
                 Finalizar y volver
               </button>
@@ -192,13 +192,13 @@ export default function SequencePlayer({
 
       {/* Barra inferior con botones grandes "Anterior" y "Siguiente" (HU-08) */}
       {!isCompleted && (
-        <footer className="border-t border-slate-200 bg-white px-4 py-4 sm:px-6">
-          <div className="mx-auto flex max-w-4xl items-center justify-between gap-4">
+        <footer className="border-t border-slate-200 bg-white px-4 py-3.5 sm:px-6 sm:py-4">
+          <div className="mx-auto grid max-w-4xl grid-cols-2 gap-3 sm:gap-4">
             <button
               type="button"
               onClick={onPrev}
               disabled={isFirstStep}
-              className="min-h-[68px] flex-1 rounded-3xl border-2 border-slate-300 bg-white px-6 py-4 text-xl font-extrabold text-slate-800 shadow-sm transition hover:bg-slate-100 focus:outline-none focus-visible:ring-4 focus-visible:ring-violet-300 active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-40"
+              className="inline-flex min-h-[56px] items-center justify-center whitespace-nowrap rounded-2xl border-2 border-slate-300 bg-white px-3 py-3 text-base font-extrabold text-slate-800 shadow-sm transition hover:bg-slate-100 focus:outline-none focus-visible:ring-4 focus-visible:ring-violet-300 active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-40 sm:min-h-[68px] sm:rounded-3xl sm:px-6 sm:py-4 sm:text-xl"
             >
               ← Anterior
             </button>
@@ -206,7 +206,7 @@ export default function SequencePlayer({
             <button
               type="button"
               onClick={onNext}
-              className="min-h-[68px] flex-1 rounded-3xl bg-violet-600 px-6 py-4 text-xl font-extrabold text-white shadow-md transition hover:bg-violet-700 focus:outline-none focus-visible:ring-4 focus-visible:ring-violet-300 active:scale-[0.99]"
+              className="inline-flex min-h-[56px] items-center justify-center whitespace-nowrap rounded-2xl bg-violet-600 px-3 py-3 text-base font-extrabold text-white shadow-md transition hover:bg-violet-700 focus:outline-none focus-visible:ring-4 focus-visible:ring-violet-300 active:scale-[0.99] sm:min-h-[68px] sm:rounded-3xl sm:px-6 sm:py-4 sm:text-xl"
             >
               {isLastStep ? "¡Terminar! ✓" : "Siguiente →"}
             </button>

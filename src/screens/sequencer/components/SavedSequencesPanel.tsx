@@ -31,14 +31,14 @@ export default function SavedSequencesPanel({
       className="flex flex-col gap-6 rounded-3xl border-2 border-slate-200 bg-white p-5 shadow-sm sm:p-7"
     >
       {/* Encabezado con contador y botón principal para crear nueva secuencia */}
-      <div className="flex flex-wrap items-center justify-between gap-4 border-b border-slate-200 pb-5">
+      <div className="flex flex-col gap-4 border-b border-slate-200 pb-5 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex items-center gap-3">
           <div>
-            <div className="flex items-center gap-2.5">
+            <div className="flex flex-wrap items-center gap-2.5">
               <h2 className="text-2xl font-extrabold text-slate-900">
                 Mis secuencias guardadas
               </h2>
-              <span className="rounded-full bg-violet-100 px-3 py-0.5 text-sm font-bold text-violet-900">
+              <span className="shrink-0 whitespace-nowrap rounded-full bg-violet-100 px-3 py-0.5 text-sm font-bold text-violet-900">
                 {savedSequences.length}
               </span>
             </div>
@@ -51,7 +51,7 @@ export default function SavedSequencesPanel({
         <button
           type="button"
           onClick={onCreateNew}
-          className="inline-flex h-12 items-center justify-center rounded-2xl bg-violet-600 px-6 text-base font-extrabold text-white shadow-sm transition hover:bg-violet-700 focus:outline-none focus-visible:ring-4 focus-visible:ring-violet-300"
+          className="inline-flex h-12 w-full shrink-0 items-center justify-center rounded-2xl bg-violet-600 px-6 text-base font-extrabold text-white shadow-sm transition hover:bg-violet-700 focus:outline-none focus-visible:ring-4 focus-visible:ring-violet-300 sm:w-auto"
         >
           + Crear nueva secuencia
         </button>

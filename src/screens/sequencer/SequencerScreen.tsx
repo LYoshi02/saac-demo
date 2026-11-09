@@ -141,7 +141,7 @@ export default function SequencerScreen({ onBack }: SequencerScreenProps) {
           className="flex flex-col gap-6 rounded-3xl border-2 border-violet-200 bg-white p-5 shadow-sm sm:p-7"
         >
           {/* Encabezado del editor con retorno al listado de secuencias guardadas */}
-          <div className="flex flex-wrap items-center justify-between gap-4 border-b border-slate-200 pb-4">
+          <div className="flex flex-col gap-4 border-b border-slate-200 pb-4 sm:flex-row sm:items-center sm:justify-between">
             <div>
               <h2 className="text-2xl font-extrabold text-slate-900">
                 {draft.savedId ? "Editando secuencia" : "Nueva secuencia de pasos"}
@@ -154,7 +154,7 @@ export default function SequencerScreen({ onBack }: SequencerScreenProps) {
             <button
               type="button"
               onClick={handleBackToList}
-              className="min-h-[48px] rounded-2xl border-2 border-slate-300 bg-white px-4 py-2 text-base font-bold text-slate-800 transition hover:bg-slate-100 focus:outline-none focus-visible:ring-4 focus-visible:ring-violet-300"
+              className="min-h-[48px] w-full shrink-0 rounded-2xl border-2 border-slate-300 bg-white px-4 py-2 text-base font-bold text-slate-800 transition hover:bg-slate-100 focus:outline-none focus-visible:ring-4 focus-visible:ring-violet-300 sm:w-auto"
             >
               ← Volver a mis secuencias
             </button>
@@ -166,7 +166,7 @@ export default function SequencerScreen({ onBack }: SequencerScreenProps) {
               htmlFor={sequenceNameInputId}
               className="text-base font-bold text-slate-800"
             >
-              Nombre de la secuencia (para guardarla y reutilizarla)
+              Nombre de la secuencia
             </label>
             <div className="flex flex-col gap-3 sm:flex-row">
               <input
@@ -213,16 +213,16 @@ export default function SequencerScreen({ onBack }: SequencerScreenProps) {
           </div>
 
           {/* Barra de acciones: Agregar paso y contador de pasos */}
-          <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border-2 border-slate-200 bg-slate-50 p-4">
+          <div className="flex flex-col items-stretch justify-between gap-3 rounded-2xl border-2 border-slate-200 bg-slate-50 p-4 sm:flex-row sm:items-center">
             <button
               type="button"
               onClick={handleOpenPickerForNewStep}
-              className="min-h-[52px] rounded-2xl bg-violet-600 px-5 py-2.5 text-base font-extrabold text-white shadow-sm transition hover:bg-violet-700 focus:outline-none focus-visible:ring-4 focus-visible:ring-violet-300"
+              className="min-h-[52px] w-full rounded-2xl bg-violet-600 px-5 py-2.5 text-base font-extrabold text-white shadow-sm transition hover:bg-violet-700 focus:outline-none focus-visible:ring-4 focus-visible:ring-violet-300 sm:w-auto"
             >
               + Agregar paso con pictograma
             </button>
 
-            <span className="text-sm font-bold text-slate-700">
+            <span className="text-center text-sm font-bold text-slate-700 sm:text-right">
               Total: {draft.steps.length}{" "}
               {draft.steps.length === 1 ? "paso" : "pasos"}
             </span>
