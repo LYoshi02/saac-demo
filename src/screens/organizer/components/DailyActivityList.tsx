@@ -24,20 +24,20 @@ function getTimeOfDayPeriod(time: string): TimeOfDayPeriod {
   if (hourPart >= 6 && hourPart < 13) {
     return {
       label: "Mañana",
-      badgeClass: "border-amber-200 bg-amber-50 text-amber-900"
+      badgeClass: "border-sky-300 bg-sky-100 text-sky-950"
     };
   }
 
   if (hourPart >= 13 && hourPart < 20) {
     return {
       label: "Tarde",
-      badgeClass: "border-sky-200 bg-sky-50 text-sky-900"
+      badgeClass: "border-amber-300 bg-amber-100 text-amber-950"
     };
   }
 
   return {
     label: "Noche",
-    badgeClass: "border-indigo-200 bg-indigo-50 text-indigo-900"
+    badgeClass: "border-slate-400 bg-slate-200 text-slate-900"
   };
 }
 
@@ -80,28 +80,29 @@ export default function DailyActivityList({
         return (
           <li
             key={activity.id}
-            className={`flex flex-col gap-4 rounded-3xl border-2 bg-white p-4 shadow-sm transition sm:flex-row sm:items-center sm:justify-between sm:p-5 ${
+            className={`flex flex-col gap-4 rounded-3xl border-2 bg-white p-4 shadow-sm transition md:flex-row md:items-center md:justify-between md:p-5 ${
               hasDuplicateTime
                 ? "border-amber-300 hover:border-amber-400"
                 : "border-slate-200 hover:border-emerald-300"
             }`}
           >
-            {/* Bloque izquierdo: Horario + Pictograma + Nombre de la actividad */}
-            <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
-              {/* Tarjeta de horario y momento del día */}
-              <div className="flex shrink-0 flex-row items-center justify-between gap-3 rounded-2xl border-2 border-emerald-200 bg-emerald-50 px-4 py-3 sm:w-32 sm:flex-col sm:justify-center sm:text-center">
-                <span className="text-2xl font-extrabold tracking-tight text-emerald-950">
-                  {activity.time}
-                </span>
-                <span
-                  className={`rounded-full border px-2.5 py-0.5 text-xs font-bold ${period.badgeClass}`}
-                >
-                  {period.label}
-                </span>
-              </div>
+            {/* Bloque izquierdo: Horario + Pictograma (juntos en fila en mobile) + Nombre */}
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-4">
+              {/* Par de recuadros iguales (Hora y Pictograma lado a lado incluso en mobile) */}
+              <div className="flex items-center gap-3 sm:gap-4">
+                {/* Tarjeta de horario y momento del día */}
+                <div className="flex h-28 w-28 shrink-0 flex-col items-center justify-center gap-2 rounded-2xl border-2 border-slate-200 bg-slate-50 p-2 text-center">
+                  <span className="text-2xl font-extrabold tracking-tight text-slate-900">
+                    {activity.time}
+                  </span>
+                  <span
+                    className={`rounded-full border px-2.5 py-0.5 text-xs font-bold ${period.badgeClass}`}
+                  >
+                    {period.label}
+                  </span>
+                </div>
 
-              {/* Pictograma y título */}
-              <div className="flex items-center gap-4">
+                {/* Recuadro del pictograma */}
                 <div className="flex h-28 w-28 shrink-0 items-center justify-center overflow-hidden rounded-2xl border-2 border-slate-200 bg-slate-50 p-2">
                   <img
                     src={activity.pictogram.imageUrl}
@@ -110,29 +111,30 @@ export default function DailyActivityList({
                     className="h-24 w-24 object-contain"
                   />
                 </div>
+              </div>
 
-                <div className="flex flex-col gap-1.5">
-                  <h3 className="text-xl font-extrabold text-slate-900 sm:text-2xl">
-                    {activity.title}
-                  </h3>
-                  <p className="text-sm font-medium text-slate-600">
-                    Pictograma: {activity.pictogram.label}
-                  </p>
-                  {hasDuplicateTime && (
-                    <span
-                      role="status"
-                      className="inline-flex w-fit items-center gap-1.5 rounded-xl border border-amber-300 bg-amber-50 px-3 py-1 text-xs font-bold text-amber-900"
-                    >
-                      ⚠ Comparte el horario {activity.time} con otra actividad
-                    </span>
-                  )}
-                </div>
+              {/* Título y metadatos de la actividad */}
+              <div className="flex min-w-0 flex-col gap-1">
+                <h3 className="break-words text-xl font-extrabold text-slate-900 sm:text-2xl">
+                  {activity.title}
+                </h3>
+                <p className="text-sm font-medium text-slate-600">
+                  Pictograma: {activity.pictogram.label}
+                </p>
+                {hasDuplicateTime && (
+                  <span
+                    role="status"
+                    className="mt-0.5 inline-flex w-fit items-center gap-1.5 rounded-xl border border-amber-300 bg-amber-50 px-3 py-1 text-xs font-bold text-amber-900"
+                  >
+                    ⚠ Comparte el horario {activity.time} con otra actividad
+                  </span>
+                )}
               </div>
             </div>
 
             {/* Bloque derecho: Acciones de edición y eliminación con confirmación (HU-04 / CU-03) */}
             {!isConfirmingDelete ? (
-              <div className="flex flex-wrap items-center justify-end gap-2.5 sm:shrink-0">
+              <div className="grid w-full grid-cols-2 gap-2.5 md:flex md:w-auto md:shrink-0 md:items-center md:justify-end">
                 <button
                   type="button"
                   onClick={() => onEditActivity(activity)}
@@ -154,10 +156,13 @@ export default function DailyActivityList({
             ) : (
               <div
                 role="alert"
-                className="flex flex-col gap-2.5 rounded-2xl border-2 border-red-300 bg-red-50 p-3.5 sm:max-w-xs"
+                className="flex w-full flex-col justify-center gap-1.5 rounded-2xl border-2 border-red-300 bg-red-50 px-3.5 py-2 md:h-28 md:w-80 md:shrink-0"
               >
-                <p className="text-sm font-bold text-red-900">
-                  ¿Seguro que querés borrar «{activity.title}» ({activity.time})?
+                <p
+                  title={`¿Seguro que querés borrar «${activity.title}» (${activity.time})?`}
+                  className="truncate text-center text-xs font-bold text-red-900 sm:text-sm"
+                >
+                  ¿Borrar «{activity.title}» ({activity.time})?
                 </p>
                 <div className="grid grid-cols-2 gap-2">
                   <button
@@ -166,14 +171,14 @@ export default function DailyActivityList({
                       onDeleteActivity(activity.id);
                       setConfirmingDeleteId(null);
                     }}
-                    className="min-h-[48px] rounded-2xl border-2 border-red-600 bg-red-600 px-3 py-2 text-sm font-extrabold text-white transition hover:bg-red-700 focus:outline-none focus-visible:ring-4 focus-visible:ring-red-300"
+                    className="h-11 rounded-xl border-2 border-red-600 bg-red-600 px-3 text-sm font-extrabold text-white transition hover:bg-red-700 focus:outline-none focus-visible:ring-4 focus-visible:ring-red-300"
                   >
                     Sí, borrar
                   </button>
                   <button
                     type="button"
                     onClick={() => setConfirmingDeleteId(null)}
-                    className="min-h-[48px] rounded-2xl border-2 border-slate-300 bg-white px-3 py-2 text-sm font-bold text-slate-800 transition hover:bg-slate-100 focus:outline-none focus-visible:ring-4 focus-visible:ring-slate-400"
+                    className="h-11 rounded-xl border-2 border-slate-300 bg-white px-3 text-sm font-bold text-slate-800 transition hover:bg-slate-100 focus:outline-none focus-visible:ring-4 focus-visible:ring-slate-400"
                   >
                     Cancelar
                   </button>

@@ -12,10 +12,8 @@ export interface ActivityFormModalProps {
   onSave: (values: ActivityFormValues) => void;
 }
 
-const QUICK_TIMES = ["08:00", "09:00", "12:30", "16:00", "20:00"];
-
 const HOURS_24 = Array.from({ length: 24 }, (_, idx) => String(idx).padStart(2, "0"));
-const MINUTES_60 = Array.from({ length: 60 }, (_, idx) => String(idx).padStart(2, "0"));
+const MINUTES_STEP_5 = Array.from({ length: 12 }, (_, idx) => String(idx * 5).padStart(2, "0"));
 
 /**
  * Diálogo modal accesible para agregar una nueva actividad o editar una existente
@@ -33,7 +31,7 @@ export default function ActivityFormModal({
   const timeInputId = useId();
   const titleInputId = useId();
 
-  const [time, setTime] = useState<string>("09:00");
+  const [time, setTime] = useState<string>("00:00");
   const [title, setTitle] = useState<string>("");
   const [pictogram, setPictogram] = useState<Pictogram | null>(null);
   const [isPickerOpen, setIsPickerOpen] = useState<boolean>(false);
@@ -49,7 +47,7 @@ export default function ActivityFormModal({
       setTitle(initialActivity.title);
       setPictogram(initialActivity.pictogram);
     } else {
-      setTime("09:00");
+      setTime("00:00");
       setTitle("");
       setPictogram(null);
     }
@@ -78,7 +76,7 @@ export default function ActivityFormModal({
     return null;
   }
 
-  const [currentHour = "09", currentMinute = "00"] = time.split(":");
+  const [currentHour = "00", currentMinute = "00"] = time.split(":");
   const sameTimeActivities = getActivitiesAtSameTime(time, initialActivity?.id);
 
   const handleSelectPictogram = (selected: Pictogram) => {
@@ -132,9 +130,9 @@ export default function ActivityFormModal({
         }}
       >
         <div className="flex max-h-[92vh] w-full max-w-2xl flex-col overflow-hidden rounded-3xl border-2 border-slate-200 bg-white shadow-xl">
-          <header className="flex items-center justify-between gap-4 border-b border-slate-200 px-6 py-4">
+          <header className="flex items-center justify-between gap-4 border-b border-slate-200 px-4 py-3.5 sm:px-6 sm:py-4">
             <div>
-              <h2 id={modalTitleId} className="text-2xl font-extrabold text-slate-900">
+              <h2 id={modalTitleId} className="text-xl font-extrabold text-slate-900 sm:text-2xl">
                 {initialActivity ? "Editar actividad" : "Agregar actividad"}
               </h2>
               <p className="text-sm font-medium text-slate-600">
@@ -145,7 +143,7 @@ export default function ActivityFormModal({
             <button
               type="button"
               onClick={onClose}
-              className="min-h-[48px] rounded-2xl border-2 border-slate-300 bg-white px-4 py-2 text-base font-semibold text-slate-800 transition hover:bg-slate-100 focus:outline-none focus-visible:ring-4 focus-visible:ring-slate-400"
+              className="min-h-[48px] shrink-0 rounded-2xl border-2 border-slate-300 bg-white px-4 py-2 text-base font-semibold text-slate-800 transition hover:bg-slate-100 focus:outline-none focus-visible:ring-4 focus-visible:ring-slate-400"
             >
               Cerrar
             </button>
@@ -153,7 +151,7 @@ export default function ActivityFormModal({
 
           <form
             onSubmit={handleSubmit}
-            className="flex flex-1 flex-col gap-6 overflow-y-auto p-6"
+            className="flex flex-1 flex-col gap-5 overflow-y-auto p-4 sm:gap-6 sm:p-6"
           >
             {/* Paso 1: Nombre de la actividad */}
             <div className="flex flex-col gap-2">
@@ -206,7 +204,7 @@ export default function ActivityFormModal({
                   </span>
 
                   <select
-                    aria-label="Minutos (00 a 59)"
+                    aria-label="Minutos (de 5 en 5)"
                     value={currentMinute}
                     onChange={(event) => {
                       setTime(`${currentHour}:${event.target.value}`);
@@ -214,7 +212,7 @@ export default function ActivityFormModal({
                     }}
                     className="cursor-pointer rounded-lg bg-transparent px-1.5 py-1 text-xl font-extrabold text-slate-900 focus:outline-none"
                   >
-                    {MINUTES_60.map((minute) => (
+                    {MINUTES_STEP_5.map((minute) => (
                       <option key={minute} value={minute}>
                         {minute}
                       </option>
@@ -224,32 +222,6 @@ export default function ActivityFormModal({
                   <span className="ml-1 rounded-lg bg-slate-100 px-2 py-0.5 text-xs font-bold text-slate-600">
                     hs
                   </span>
-                </div>
-
-                <div className="flex flex-wrap items-center gap-1.5">
-                  <span className="mr-1 text-xs font-bold text-slate-500">
-                    Horarios rápidos:
-                  </span>
-                  {QUICK_TIMES.map((preset) => {
-                    const isSelected = time === preset;
-                    return (
-                      <button
-                        key={preset}
-                        type="button"
-                        onClick={() => {
-                          setTime(preset);
-                          setValidationError(null);
-                        }}
-                        className={`min-h-[40px] rounded-xl border px-3 py-1 text-sm font-bold transition focus:outline-none focus-visible:ring-4 focus-visible:ring-emerald-300 ${
-                          isSelected
-                            ? "border-emerald-600 bg-emerald-100 text-emerald-950"
-                            : "border-slate-300 bg-white text-slate-700 hover:bg-slate-100"
-                        }`}
-                      >
-                        {preset}
-                      </button>
-                    );
-                  })}
                 </div>
               </div>
 
@@ -289,7 +261,7 @@ export default function ActivityFormModal({
                   )}
                 </div>
 
-                <div className="flex flex-1 flex-col items-center gap-3 text-center sm:items-start sm:text-left">
+                <div className="flex w-full flex-1 flex-col items-center gap-3 text-center sm:w-auto sm:items-start sm:text-left">
                   <p className="text-base font-bold text-slate-900">
                     {pictogram
                       ? `Seleccionado: ${pictogram.label}`
@@ -298,7 +270,7 @@ export default function ActivityFormModal({
                   <button
                     type="button"
                     onClick={() => setIsPickerOpen(true)}
-                    className="min-h-[48px] rounded-2xl border-2 border-emerald-600 bg-emerald-600 px-5 py-2 text-base font-extrabold text-white shadow-sm transition hover:bg-emerald-700 focus:outline-none focus-visible:ring-4 focus-visible:ring-emerald-300"
+                    className="min-h-[48px] w-full rounded-2xl border-2 border-emerald-600 bg-emerald-600 px-5 py-2 text-base font-extrabold text-white shadow-sm transition hover:bg-emerald-700 focus:outline-none focus-visible:ring-4 focus-visible:ring-emerald-300 sm:w-auto"
                   >
                     {pictogram ? "Cambiar pictograma…" : "Buscar pictograma…"}
                   </button>
@@ -315,17 +287,17 @@ export default function ActivityFormModal({
               </div>
             )}
 
-            <footer className="mt-2 flex flex-wrap items-center justify-end gap-3 border-t border-slate-200 pt-4">
+            <footer className="mt-2 grid grid-cols-2 gap-3 border-t border-slate-200 pt-4 sm:flex sm:items-center sm:justify-end">
               <button
                 type="button"
                 onClick={onClose}
-                className="min-h-[48px] rounded-2xl border-2 border-slate-300 bg-white px-5 py-2.5 text-base font-bold text-slate-800 transition hover:bg-slate-100 focus:outline-none focus-visible:ring-4 focus-visible:ring-slate-400"
+                className="min-h-[48px] rounded-2xl border-2 border-slate-300 bg-white px-4 py-2.5 text-base font-bold text-slate-800 transition hover:bg-slate-100 focus:outline-none focus-visible:ring-4 focus-visible:ring-slate-400 sm:px-5"
               >
                 Cancelar
               </button>
               <button
                 type="submit"
-                className="min-h-[48px] rounded-2xl bg-emerald-600 px-6 py-2.5 text-base font-extrabold text-white shadow-sm transition hover:bg-emerald-700 focus:outline-none focus-visible:ring-4 focus-visible:ring-emerald-300"
+                className="min-h-[48px] rounded-2xl bg-emerald-600 px-4 py-2.5 text-base font-extrabold text-white shadow-sm transition hover:bg-emerald-700 focus:outline-none focus-visible:ring-4 focus-visible:ring-emerald-300 sm:px-6"
               >
                 {initialActivity ? "Guardar cambios" : "Guardar actividad"}
               </button>

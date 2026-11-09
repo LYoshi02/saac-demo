@@ -93,7 +93,7 @@ export default function OrganizerScreen({ onBack }: OrganizerScreenProps) {
                     setStatusNotice(null);
                   }}
                   aria-pressed={isSelected}
-                  className={`flex min-h-[52px] flex-col items-center justify-center rounded-2xl border-2 px-3 py-2 text-center transition focus:outline-none focus-visible:ring-4 focus-visible:ring-emerald-300 ${
+                  className={`flex min-h-[52px] flex-col items-center justify-center rounded-2xl border-2 px-3 py-2 text-center transition last:col-span-2 focus:outline-none focus-visible:ring-4 focus-visible:ring-emerald-300 sm:last:col-span-1 ${
                     isSelected
                       ? "border-emerald-600 bg-emerald-600 text-white shadow-sm"
                       : "border-slate-200 bg-slate-50 text-slate-800 hover:border-emerald-300 hover:bg-emerald-50"
@@ -116,21 +116,21 @@ export default function OrganizerScreen({ onBack }: OrganizerScreenProps) {
         {/* Contenedor principal de la agenda diaria (HU-04 / CU-03) */}
         <section
           aria-label={`Agenda diaria del ${selectedDayOption.label}`}
-          className="flex flex-col gap-6 rounded-3xl border-2 border-emerald-200 bg-white p-5 shadow-sm sm:p-7"
+          className="flex flex-col gap-5 rounded-3xl border-2 border-emerald-200 bg-white p-4 shadow-sm sm:gap-6 sm:p-7"
         >
           {/* Encabezado del día con botón principal para agregar actividad */}
-          <div className="flex flex-wrap items-center justify-between gap-4 border-b border-slate-200 pb-5">
+          <div className="flex flex-col gap-4 border-b border-slate-200 pb-5 sm:flex-row sm:items-center sm:justify-between">
             <div>
-              <div className="flex items-center gap-3">
+              <div className="flex flex-wrap items-center gap-2.5">
                 <h2 className="text-2xl font-extrabold text-slate-900">
                   Agenda del {selectedDayOption.label}
                 </h2>
-                <span className="rounded-full bg-emerald-100 px-3 py-0.5 text-sm font-bold text-emerald-900">
+                <span className="shrink-0 whitespace-nowrap rounded-full bg-emerald-100 px-3 py-0.5 text-sm font-bold text-emerald-900">
                   {activities.length}{" "}
                   {activities.length === 1 ? "actividad" : "actividades"}
                 </span>
               </div>
-              <p className="mt-0.5 text-sm text-slate-600">
+              <p className="mt-1 text-sm text-slate-600">
                 Armá la rutina del día con horarios y pictogramas para mostrársela al niño.
               </p>
             </div>
@@ -138,7 +138,7 @@ export default function OrganizerScreen({ onBack }: OrganizerScreenProps) {
             <button
               type="button"
               onClick={handleOpenAddModal}
-              className="inline-flex min-h-[48px] items-center justify-center rounded-2xl bg-emerald-600 px-6 py-2.5 text-base font-extrabold text-white shadow-sm transition hover:bg-emerald-700 focus:outline-none focus-visible:ring-4 focus-visible:ring-emerald-300"
+              className="inline-flex min-h-[48px] w-full shrink-0 items-center justify-center rounded-2xl bg-emerald-600 px-6 py-2.5 text-base font-extrabold text-white shadow-sm transition hover:bg-emerald-700 focus:outline-none focus-visible:ring-4 focus-visible:ring-emerald-300 sm:w-auto"
             >
               + Agregar actividad
             </button>
