@@ -17,7 +17,7 @@ export default function ScreenLayout({ title, onBack, children }: ScreenLayoutPr
             onClick={onBack}
             className="min-h-[48px] rounded-2xl border-2 border-slate-300 px-4 py-2 text-base font-semibold text-slate-800 transition hover:bg-slate-100 focus:outline-none focus-visible:ring-4 focus-visible:ring-slate-400"
           >
-            ← Inicio
+            ← Volver
           </button>
           <h1 className="text-2xl font-extrabold text-slate-900">{title}</h1>
         </div>
