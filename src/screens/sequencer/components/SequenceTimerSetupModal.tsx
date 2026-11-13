@@ -28,13 +28,16 @@ export default function SequenceTimerSetupModal({
   const minutesInputId = useId();
   const secondsInputId = useId();
 
-  const [minutesInput, setMinutesInput] = useState<string>("5");
-  const [secondsInput, setSecondsInput] = useState<string>("0");
+  const [minutesInput, setMinutesInput] = useState<string>("");
+  const [secondsInput, setSecondsInput] = useState<string>("");
 
   useEffect(() => {
     if (!isOpen) {
       return;
     }
+
+    setMinutesInput("");
+    setSecondsInput("");
 
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
@@ -52,8 +55,11 @@ export default function SequenceTimerSetupModal({
     return null;
   }
 
-  const parsedMinutes = minutesInput.trim() === "" ? 0 : Number.parseInt(minutesInput, 10);
-  const parsedSeconds = secondsInput.trim() === "" ? 0 : Number.parseInt(secondsInput, 10);
+  const hasMinutes = minutesInput.trim() !== "";
+  const hasSeconds = secondsInput.trim() !== "";
+
+  const parsedMinutes = !hasMinutes ? 0 : Number.parseInt(minutesInput, 10);
+  const parsedSeconds = !hasSeconds ? 0 : Number.parseInt(secondsInput, 10);
 
   const safeMinutes = Number.isNaN(parsedMinutes) ? -1 : parsedMinutes;
   const safeSeconds = Number.isNaN(parsedSeconds) ? -1 : parsedSeconds;
@@ -66,19 +72,21 @@ export default function SequenceTimerSetupModal({
     validationError = "Ingresá un valor numérico válido en minutos y segundos.";
   } else if (safeSeconds > 59) {
     validationError = "Los segundos deben estar entre 0 y 59.";
-  } else if (totalSeconds <= 0) {
-    validationError =
-      "Elegí una duración mayor a 0 segundos o iniciá la secuencia sin límite de tiempo.";
   } else if (totalSeconds > MAX_SEQUENCE_TIME_SECONDS) {
     validationError = `El tiempo máximo disponible es de ${MAX_SEQUENCE_TIME_MINUTES} minutos.`;
   }
 
-  const handleConfirmWithTime = () => {
-    if (validationError || totalSeconds <= 0 || totalSeconds > MAX_SEQUENCE_TIME_SECONDS) {
+  const handleStart = () => {
+    if (validationError) {
       return;
     }
-    unlockSequencerAudio();
-    onStartWithTime(totalSeconds);
+
+    if (totalSeconds > 0) {
+      unlockSequencerAudio();
+      onStartWithTime(totalSeconds);
+    } else {
+      onStartWithoutTime();
+    }
   };
 
   const displayName = sequenceName.trim() || "Secuencia de pasos";
@@ -120,42 +128,14 @@ export default function SequenceTimerSetupModal({
           </button>
         </div>
 
-        {/* Opción 1: Iniciar sin límite de tiempo */}
-        <div className="flex flex-col gap-3 rounded-2xl border-2 border-slate-200 bg-slate-50 p-4">
-          <div>
-            <h3 className="text-base font-extrabold text-slate-900">
-              Opción 1: Sin límite de tiempo
-            </h3>
-            <p className="text-xs font-medium text-slate-600">
-              Avanzá paso a paso al ritmo del niño.
-            </p>
-          </div>
-          <button
-            type="button"
-            onClick={onStartWithoutTime}
-            className="inline-flex min-h-[52px] w-full items-center justify-center gap-2 rounded-2xl bg-violet-600 px-6 py-3 text-base font-extrabold text-white shadow-md transition hover:bg-violet-700 focus:outline-none focus-visible:ring-4 focus-visible:ring-violet-300"
-          >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              viewBox="0 0 20 20"
-              fill="currentColor"
-              aria-hidden="true"
-              className="h-4 w-4 shrink-0"
-            >
-              <path d="M6.3 2.84A1.5 1.5 0 0 0 4 4.11v11.78a1.5 1.5 0 0 0 2.3 1.27l9.344-5.891a1.5 1.5 0 0 0 0-2.538L6.3 2.841Z" />
-            </svg>
-            <span>Iniciar sin tiempo</span>
-          </button>
-        </div>
-
-        {/* Opción 2: Configurar tiempo disponible (máx. 50 minutos) */}
+        {/* Configuración opcional de tiempo y botón único de inicio */}
         <div className="flex flex-col gap-4 rounded-2xl border-2 border-violet-200 bg-violet-50/40 p-4 sm:p-5">
           <div>
             <h3 className="text-base font-extrabold text-slate-900">
-              Opción 2: Con tiempo disponible
+              Tiempo disponible (opcional)
             </h3>
             <p className="text-xs font-medium text-slate-600">
-              Se mostrará una barra de tiempo restante y sonará una alerta al terminar.
+              Si dejás los campos vacíos, la secuencia iniciará sin límite de tiempo.
             </p>
           </div>
 
@@ -174,9 +154,10 @@ export default function SequenceTimerSetupModal({
                 min={0}
                 max={MAX_SEQUENCE_TIME_MINUTES}
                 inputMode="numeric"
+                placeholder="Sin tiempo"
                 value={minutesInput}
                 onChange={(event) => setMinutesInput(event.target.value)}
-                className="min-h-[50px] w-full rounded-2xl border-2 border-slate-300 bg-white px-4 py-2 text-lg font-extrabold text-slate-900 focus:border-violet-600 focus:outline-none focus-visible:ring-4 focus-visible:ring-violet-300"
+                className="min-h-[50px] w-full rounded-2xl border-2 border-slate-300 bg-white px-4 py-2 text-lg font-extrabold text-slate-900 placeholder:font-normal placeholder:text-slate-400 focus:border-violet-600 focus:outline-none focus-visible:ring-4 focus-visible:ring-violet-300"
               />
             </div>
 
@@ -193,9 +174,10 @@ export default function SequenceTimerSetupModal({
                 min={0}
                 max={59}
                 inputMode="numeric"
+                placeholder="Sin tiempo"
                 value={secondsInput}
                 onChange={(event) => setSecondsInput(event.target.value)}
-                className="min-h-[50px] w-full rounded-2xl border-2 border-slate-300 bg-white px-4 py-2 text-lg font-extrabold text-slate-900 focus:border-violet-600 focus:outline-none focus-visible:ring-4 focus-visible:ring-violet-300"
+                className="min-h-[50px] w-full rounded-2xl border-2 border-slate-300 bg-white px-4 py-2 text-lg font-extrabold text-slate-900 placeholder:font-normal placeholder:text-slate-400 focus:border-violet-600 focus:outline-none focus-visible:ring-4 focus-visible:ring-violet-300"
               />
             </div>
           </div>
@@ -211,7 +193,7 @@ export default function SequenceTimerSetupModal({
 
           <button
             type="button"
-            onClick={handleConfirmWithTime}
+            onClick={handleStart}
             disabled={Boolean(validationError)}
             className="inline-flex min-h-[52px] w-full items-center justify-center gap-2 rounded-2xl bg-violet-600 px-6 py-3 text-base font-extrabold text-white shadow-md transition hover:bg-violet-700 focus:outline-none focus-visible:ring-4 focus-visible:ring-violet-300 disabled:cursor-not-allowed disabled:opacity-40"
           >
@@ -224,7 +206,7 @@ export default function SequenceTimerSetupModal({
             >
               <path d="M6.3 2.84A1.5 1.5 0 0 0 4 4.11v11.78a1.5 1.5 0 0 0 2.3 1.27l9.344-5.891a1.5 1.5 0 0 0 0-2.538L6.3 2.841Z" />
             </svg>
-            <span>Iniciar con tiempo</span>
+            <span>Iniciar</span>
           </button>
         </div>
       </div>
