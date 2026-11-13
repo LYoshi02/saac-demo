@@ -5,6 +5,7 @@ import type { Pictogram } from "../../services/arasaac";
 import SavedSequencesPanel from "./components/SavedSequencesPanel";
 import SequencePlayer from "./components/SequencePlayer";
 import SequenceStepList from "./components/SequenceStepList";
+import SequenceTimerSetupModal from "./components/SequenceTimerSetupModal";
 import { useSequencer } from "./useSequencer";
 
 interface SequencerScreenProps {
@@ -12,6 +13,14 @@ interface SequencerScreenProps {
 }
 
 type SequencerView = "list" | "editor";
+
+interface PendingExecutionRequest {
+  /** ID de secuencia guardada a cargar, o `null` si se ejecuta el borrador actual del editor. */
+  sequenceId: string | null;
+  sequenceName: string;
+  resumeFromSavedStep: boolean;
+  resumeStepNumber: number;
+}
 
 /**
  * Módulo Secuenciador de rutinas (HU-07, HU-08 y HU-09 / CU-06, CU-07 y CU-08).
@@ -27,6 +36,9 @@ export default function SequencerScreen({ onBack }: SequencerScreenProps) {
     isPlaying,
     currentStepIndex,
     isCompleted,
+    completionReason,
+    configuredDurationSeconds,
+    remainingSeconds,
     startNewSequence,
     setDraftName,
     addStep,
@@ -49,6 +61,10 @@ export default function SequencerScreen({ onBack }: SequencerScreenProps) {
   // Estado del selector de pictogramas (para agregar un nuevo paso o cambiar el de un paso existente)
   const [isPickerOpen, setIsPickerOpen] = useState<boolean>(false);
   const [editingStepId, setEditingStepId] = useState<string | null>(null);
+
+  // Estado del modal de configuración opcional de tiempo antes de iniciar una secuencia
+  const [pendingExecution, setPendingExecution] =
+    useState<PendingExecutionRequest | null>(null);
 
   // Mensajes de feedback al guardar la secuencia (HU-09)
   const [saveFeedback, setSaveFeedback] = useState<{
@@ -108,6 +124,48 @@ export default function SequencerScreen({ onBack }: SequencerScreenProps) {
     });
   };
 
+  const handleRequestExecuteSaved = (
+    sequenceId: string,
+    resumeFromSavedStep: boolean
+  ) => {
+    const target = savedSequences.find((seq) => seq.id === sequenceId);
+    if (!target || target.steps.length < 2) {
+      return;
+    }
+
+    const hasValidSavedStep =
+      resumeFromSavedStep &&
+      target.lastViewedStepIndex !== null &&
+      target.lastViewedStepIndex >= 0 &&
+      target.lastViewedStepIndex < target.steps.length;
+
+    setPendingExecution({
+      sequenceId: target.id,
+      sequenceName: target.name,
+      resumeFromSavedStep: hasValidSavedStep,
+      resumeStepNumber: hasValidSavedStep ? (target.lastViewedStepIndex ?? 0) + 1 : 1
+    });
+  };
+
+  const handleStartConfirmedExecution = (durationSeconds: number | null) => {
+    if (!pendingExecution) {
+      return;
+    }
+
+    if (pendingExecution.sequenceId) {
+      loadSavedSequence(
+        pendingExecution.sequenceId,
+        true,
+        pendingExecution.resumeFromSavedStep,
+        durationSeconds
+      );
+    } else {
+      startExecution(pendingExecution.resumeFromSavedStep, durationSeconds);
+    }
+
+    setPendingExecution(null);
+  };
+
   const currentlyEditingStep = editingStepId
     ? draft.steps.find((step) => step.id === editingStepId) ?? null
     : null;
@@ -129,9 +187,7 @@ export default function SequencerScreen({ onBack }: SequencerScreenProps) {
           savedSequences={savedSequences}
           onCreateNew={handleGoToCreateNew}
           onSelectToEdit={handleGoToEditSaved}
-          onSelectToExecute={(id, resumeFromSavedStep) => {
-            loadSavedSequence(id, true, resumeFromSavedStep);
-          }}
+          onSelectToExecute={handleRequestExecuteSaved}
           onDelete={deleteSavedSequence}
         />
       ) : (
@@ -256,6 +312,19 @@ export default function SequencerScreen({ onBack }: SequencerScreenProps) {
         accent="violet"
       />
 
+      {/* Modal previo para elegir de forma opcional el tiempo disponible (máx. 50 min) */}
+      <SequenceTimerSetupModal
+        isOpen={pendingExecution !== null}
+        sequenceName={pendingExecution?.sequenceName ?? draft.name}
+        isResuming={pendingExecution?.resumeFromSavedStep ?? false}
+        resumeStepNumber={pendingExecution?.resumeStepNumber ?? 1}
+        onStartWithTime={(durationSeconds) =>
+          handleStartConfirmedExecution(durationSeconds)
+        }
+        onStartWithoutTime={() => handleStartConfirmedExecution(null)}
+        onClose={() => setPendingExecution(null)}
+      />
+
       {/* Reproductor paso a paso a pantalla completa (HU-08 / CU-07) */}
       {isPlaying && canExecute && (
         <SequencePlayer
@@ -263,9 +332,12 @@ export default function SequencerScreen({ onBack }: SequencerScreenProps) {
           steps={draft.steps}
           currentStepIndex={currentStepIndex}
           isCompleted={isCompleted}
+          completionReason={completionReason}
+          configuredDurationSeconds={configuredDurationSeconds}
+          remainingSeconds={remainingSeconds}
           onNext={nextStep}
           onPrev={prevStep}
-          onRestart={() => startExecution(false)}
+          onRestart={() => startExecution(false, configuredDurationSeconds)}
           onExit={exitExecution}
         />
       )}

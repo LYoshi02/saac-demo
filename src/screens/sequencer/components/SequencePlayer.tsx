@@ -1,26 +1,41 @@
 import { useEffect } from "react";
-import type { SequenceStep } from "../types";
+import { unlockSequencerAudio } from "../soundAlert";
+import type { SequenceCompletionReason, SequenceStep } from "../types";
 
 export interface SequencePlayerProps {
   sequenceName: string;
   steps: SequenceStep[];
   currentStepIndex: number;
   isCompleted: boolean;
+  completionReason: SequenceCompletionReason | null;
+  configuredDurationSeconds: number | null;
+  remainingSeconds: number | null;
   onNext: () => void;
   onPrev: () => void;
   onRestart: () => void;
   onExit: () => void;
 }
 
+function formatRemainingTime(totalSeconds: number): string {
+  const safe = Math.max(0, Math.floor(totalSeconds));
+  const minutes = Math.floor(safe / 60);
+  const seconds = safe % 60;
+  return `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
+}
+
 /**
  * Vista de ejecución paso a paso a pantalla completa y pantalla de cierre (HU-08 / CU-07).
- * Diseñada con botones de gran tamaño, alto contraste y guía visual comprensible sin leer números.
+ * Diseñada con botones de gran tamaño, alto contraste, indicador visual de tiempo restante
+ * (cuando se eligió tiempo límite) y guía visual comprensible sin leer números.
  */
 export default function SequencePlayer({
   sequenceName,
   steps,
   currentStepIndex,
   isCompleted,
+  completionReason,
+  configuredDurationSeconds,
+  remainingSeconds,
   onNext,
   onPrev,
   onRestart,
@@ -31,6 +46,33 @@ export default function SequencePlayer({
   const isLastStep = currentStepIndex === steps.length - 1;
   const displayTitle = sequenceName.trim() || "Secuencia paso a paso";
 
+  const hasTimer =
+    configuredDurationSeconds !== null &&
+    configuredDurationSeconds > 0 &&
+    remainingSeconds !== null;
+
+  const progressRatio = hasTimer
+    ? Math.max(0, Math.min(1, remainingSeconds / configuredDurationSeconds))
+    : 1;
+  const progressPercent = Math.round(progressRatio * 100);
+
+  // Clases estáticas de Tailwind según el porcentaje de tiempo restante (alto contraste WCAG AA)
+  const timerBarColorClass =
+    progressRatio > 0.5
+      ? "bg-violet-600"
+      : progressRatio > 0.2
+        ? "bg-amber-500"
+        : "bg-red-600";
+
+  const timerBadgeColorClass =
+    progressRatio > 0.5
+      ? "border-violet-200 bg-violet-50 text-violet-900"
+      : progressRatio > 0.2
+        ? "border-amber-300 bg-amber-50 text-amber-900"
+        : "border-red-300 bg-red-50 text-red-900";
+
+  const isTimeExpired = isCompleted && completionReason === "time_expired";
+
   // Soporte de navegación por teclado para accesibilidad
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
@@ -38,7 +80,10 @@ export default function SequencePlayer({
         onExit();
       } else if (event.key === "ArrowRight" && !isCompleted) {
         onNext();
-      } else if (event.key === "ArrowLeft" && (!isFirstStep || isCompleted)) {
+      } else if (
+        event.key === "ArrowLeft" &&
+        (!isFirstStep || (isCompleted && completionReason !== "time_expired"))
+      ) {
         onPrev();
       }
     };
@@ -47,7 +92,7 @@ export default function SequencePlayer({
     return () => {
       window.removeEventListener("keydown", handleKeyDown);
     };
-  }, [isCompleted, isFirstStep, onExit, onNext, onPrev]);
+  }, [isCompleted, completionReason, isFirstStep, onExit, onNext, onPrev]);
 
   return (
     <div
@@ -56,7 +101,7 @@ export default function SequencePlayer({
       aria-label={`Ejecutando rutina: ${displayTitle}`}
       className="fixed inset-0 z-40 flex flex-col bg-slate-50"
     >
-      {/* Encabezado con salida y barra de progreso visual por bloques */}
+      {/* Encabezado con salida y barra de progreso por pasos */}
       <header className="border-b border-slate-200 bg-white px-4 py-3 sm:px-6 sm:py-4">
         <div className="mx-auto flex max-w-5xl flex-wrap items-center justify-between gap-4">
           <div className="flex items-center gap-3">
@@ -76,13 +121,14 @@ export default function SequencePlayer({
           <div
             aria-label={
               isCompleted
-                ? "Secuencia completada"
+                ? "Secuencia finalizada"
                 : `Paso ${currentStepIndex + 1} de ${steps.length}`
             }
             className="flex flex-wrap items-center gap-1.5 sm:gap-2"
           >
             {steps.map((step, idx) => {
-              const isDone = isCompleted || idx < currentStepIndex;
+              const isDone =
+                (isCompleted && !isTimeExpired) || idx < currentStepIndex;
               const isCurrent = !isCompleted && idx === currentStepIndex;
 
               return (
@@ -110,6 +156,40 @@ export default function SequencePlayer({
         </div>
       </header>
 
+      {/* Indicador visual continuo del tiempo restante sin bordes ni fondo blanco envolvente */}
+      {hasTimer && !isCompleted && (
+        <section
+          aria-label="Tiempo restante de la rutina"
+          className="w-full px-4 pt-4 sm:px-6"
+        >
+          <div
+            role="timer"
+            aria-label={`Tiempo restante: ${formatRemainingTime(remainingSeconds)}`}
+            className="mx-auto flex max-w-5xl flex-col gap-2 rounded-2xl border-2 border-slate-200 bg-white px-4 py-2.5 sm:flex-row sm:items-center sm:gap-4"
+          >
+            <div
+              className={`inline-flex shrink-0 items-center gap-2 self-start rounded-xl border px-3 py-1 text-sm font-extrabold sm:self-auto ${timerBadgeColorClass}`}
+            >
+              <span aria-hidden="true" className="text-base">
+                ⏱
+              </span>
+              <span>Tiempo restante: {formatRemainingTime(remainingSeconds)}</span>
+            </div>
+
+            {/* Barra visual continua que se vacía a medida que corre el tiempo (comprensible sin leer números) */}
+            <div
+              aria-hidden="true"
+              className="h-5 w-full overflow-hidden rounded-full border-2 border-slate-300 bg-slate-200 p-0.5"
+            >
+              <div
+                className={`h-full rounded-full transition-all duration-700 ease-linear ${timerBarColorClass}`}
+                style={{ width: `${progressPercent}%` }}
+              />
+            </div>
+          </div>
+        </section>
+      )}
+
       {/* Contenido central a pantalla completa */}
       <main className="mx-auto flex w-full max-w-4xl flex-1 flex-col items-center overflow-y-auto px-4 py-4 sm:px-6 sm:py-6">
         {!isCompleted && currentStep ? (
@@ -133,27 +213,52 @@ export default function SequencePlayer({
             </p>
           </div>
         ) : (
-          /* Pantalla de cierre al completar todos los pasos (HU-08 / CU-07 paso 5) */
-          <div className="my-auto flex w-full flex-col items-center gap-4 rounded-3xl border-4 border-emerald-300 bg-white p-5 text-center shadow-md sm:gap-6 sm:p-10">
-            <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-full bg-emerald-100 text-3xl font-extrabold text-emerald-700 sm:h-24 sm:w-24 sm:text-5xl">
-              ✓
+          /* Pantalla de cierre al completar todos los pasos o al terminar el tiempo (HU-08 / CU-07 paso 5) */
+          <div
+            className={`my-auto flex w-full flex-col items-center gap-4 rounded-3xl border-4 bg-white p-5 text-center shadow-md sm:gap-6 sm:p-10 ${
+              isTimeExpired ? "border-amber-400" : "border-emerald-300"
+            }`}
+          >
+            <div
+              className={`flex h-16 w-16 shrink-0 items-center justify-center rounded-full text-3xl font-extrabold sm:h-24 sm:w-24 sm:text-5xl ${
+                isTimeExpired
+                  ? "bg-amber-100 text-amber-800"
+                  : "bg-emerald-100 text-emerald-700"
+              }`}
+            >
+              {isTimeExpired ? "⏰" : "✓"}
             </div>
 
             <h3 className="text-2xl font-extrabold text-slate-900 sm:text-4xl">
-              ¡Muy bien! Terminaste la rutina
+              {isTimeExpired
+                ? "¡Se terminó el tiempo de la secuencia!"
+                : "¡Muy bien! Terminaste la rutina"}
             </h3>
 
             <p className="max-w-lg text-base font-medium text-slate-700 sm:text-lg">
-              Completaste todos los pasos de{" "}
-              <span className="font-bold text-slate-900">«{displayTitle}»</span>.
+              {isTimeExpired ? (
+                <>
+                  Finalizó el tiempo disponible para{" "}
+                  <span className="font-bold text-slate-900">«{displayTitle}»</span>.
+                </>
+              ) : (
+                <>
+                  Completaste todos los pasos de{" "}
+                  <span className="font-bold text-slate-900">«{displayTitle}»</span>.
+                </>
+              )}
             </p>
 
-            {/* Resumen visual de los pasos completados */}
+            {/* Resumen visual de los pasos de la secuencia */}
             <div className="grid w-full grid-cols-2 gap-2.5 sm:grid-cols-4 sm:gap-3">
               {steps.map((step, index) => (
                 <div
                   key={step.id}
-                  className="flex flex-col items-center gap-2 rounded-2xl border-2 border-emerald-200 bg-emerald-50/60 p-2.5 sm:p-3"
+                  className={`flex flex-col items-center gap-2 rounded-2xl border-2 p-2.5 sm:p-3 ${
+                    isTimeExpired
+                      ? "border-amber-200 bg-amber-50/50"
+                      : "border-emerald-200 bg-emerald-50/60"
+                  }`}
                 >
                   <div className="flex h-16 w-16 items-center justify-center rounded-xl bg-white p-1.5 sm:h-20 sm:w-20">
                     <img
@@ -172,7 +277,12 @@ export default function SequencePlayer({
             <div className="mt-1 flex w-full flex-col items-stretch justify-center gap-3 sm:mt-2 sm:w-auto sm:flex-row sm:items-center sm:gap-4">
               <button
                 type="button"
-                onClick={onRestart}
+                onClick={() => {
+                  if (hasTimer) {
+                    unlockSequencerAudio();
+                  }
+                  onRestart();
+                }}
                 className="min-h-[54px] w-full rounded-2xl border-2 border-violet-600 bg-white px-6 py-3 text-base font-extrabold text-violet-800 transition hover:bg-violet-50 focus:outline-none focus-visible:ring-4 focus-visible:ring-violet-300 sm:min-h-[60px] sm:w-auto sm:rounded-3xl sm:px-7 sm:py-3.5 sm:text-lg"
               >
                 ↻ Repetir secuencia
@@ -216,4 +326,3 @@ export default function SequencePlayer({
     </div>
   );
 }
-

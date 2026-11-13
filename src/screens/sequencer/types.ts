@@ -53,3 +53,15 @@ export interface SaveSequenceResult {
   error?: string;
 }
 
+/**
+ * Tiempo máximo permitido para completar una secuencia: 50 minutos (3000 segundos).
+ */
+export const MAX_SEQUENCE_TIME_MINUTES = 50;
+export const MAX_SEQUENCE_TIME_SECONDS = MAX_SEQUENCE_TIME_MINUTES * 60;
+
+/**
+ * Motivo por el cual se llegó a la pantalla de fin de la secuencia.
+ */
+export type SequenceCompletionReason = "steps_completed" | "time_expired";
+
+
