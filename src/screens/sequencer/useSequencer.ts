@@ -1,10 +1,13 @@
 import { useCallback, useEffect, useState } from "react";
 import { getPictogramImageUrl, type Pictogram } from "../../services/arasaac";
-import type {
-  ActiveSequenceDraft,
-  SaveSequenceResult,
-  SavedSequence,
-  SequenceStep
+import { playTimeUpAlert } from "./soundAlert";
+import {
+  MAX_SEQUENCE_TIME_SECONDS,
+  type ActiveSequenceDraft,
+  type SaveSequenceResult,
+  type SavedSequence,
+  type SequenceCompletionReason,
+  type SequenceStep
 } from "./types";
 
 const SAVED_SEQUENCES_STORAGE_KEY = "saac_sequencer_saved_v1";
@@ -20,11 +23,11 @@ function createDefaultSavedSequences(): SavedSequence[] {
       id: "seed-step-1",
       text: "Poner pasta en el cepillo",
       pictogram: {
-        id: 2858,
+        id: 30614,
         label: "Pasta de dientes",
         keywords: ["pasta de dientes", "dentífrico", "cepillo"],
         categories: ["higiene"],
-        imageUrl: getPictogramImageUrl(2858),
+        imageUrl: getPictogramImageUrl(30614),
         source: "arasaac"
       }
     },
@@ -127,6 +130,17 @@ function generateId(prefix: string): string {
   return `${prefix}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
 }
 
+function sanitizeDurationSeconds(durationSeconds?: number | null): number | null {
+  if (durationSeconds === null || durationSeconds === undefined) {
+    return null;
+  }
+  const rounded = Math.floor(durationSeconds);
+  if (rounded <= 0) {
+    return null;
+  }
+  return Math.min(rounded, MAX_SEQUENCE_TIME_SECONDS);
+}
+
 /**
  * Hook de estado y persistencia del módulo Secuenciador (HU-07, HU-08 y HU-09).
  */
@@ -143,6 +157,11 @@ export function useSequencer() {
   const [isPlaying, setIsPlaying] = useState<boolean>(false);
   const [currentStepIndex, setCurrentStepIndex] = useState<number>(0);
   const [isCompleted, setIsCompleted] = useState<boolean>(false);
+  const [completionReason, setCompletionReason] = useState<SequenceCompletionReason | null>(null);
+
+  // Estado del tiempo opcional configurado para completar la secuencia (máx. 50 min)
+  const [configuredDurationSeconds, setConfiguredDurationSeconds] = useState<number | null>(null);
+  const [remainingSeconds, setRemainingSeconds] = useState<number | null>(null);
 
   // Persistir secuencias guardadas en localStorage
   useEffect(() => {
@@ -163,19 +182,46 @@ export function useSequencer() {
   }, [draft]);
 
   /** Sincroniza el último paso visto también en la lista de guardadas si corresponde. */
-  const syncLastStepToSaved = useCallback(
-    (savedId: string | null, lastStep: number | null) => {
-      if (!savedId) {
-        return;
-      }
-      setSavedSequences((prev) =>
-        prev.map((seq) =>
-          seq.id === savedId ? { ...seq, lastViewedStepIndex: lastStep } : seq
-        )
-      );
-    },
-    []
-  );
+  const syncLastStepToSaved = useCallback((savedId: string | null, lastStep: number | null) => {
+    if (!savedId) {
+      return;
+    }
+    setSavedSequences((prev) =>
+      prev.map((seq) => (seq.id === savedId ? { ...seq, lastViewedStepIndex: lastStep } : seq))
+    );
+  }, []);
+
+  // Cuenta regresiva cuando la secuencia se ejecuta con tiempo disponible configurado
+  useEffect(() => {
+    if (!isPlaying || isCompleted || remainingSeconds === null) {
+      return;
+    }
+
+    if (remainingSeconds <= 0) {
+      playTimeUpAlert();
+      setIsCompleted(true);
+      setCompletionReason("time_expired");
+      setDraft((prev) => ({
+        ...prev,
+        lastViewedStepIndex: null
+      }));
+      syncLastStepToSaved(draft.savedId, null);
+      return;
+    }
+
+    const timerId = window.setInterval(() => {
+      setRemainingSeconds((prev) => {
+        if (prev === null || prev <= 0) {
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
+    return () => {
+      window.clearInterval(timerId);
+    };
+  }, [isPlaying, isCompleted, remainingSeconds, draft.savedId, syncLastStepToSaved]);
 
   /** Inicia una nueva secuencia en blanco (CU-06 paso 1). */
   const startNewSequence = useCallback(() => {
@@ -187,6 +233,9 @@ export function useSequencer() {
     });
     setIsPlaying(false);
     setIsCompleted(false);
+    setCompletionReason(null);
+    setConfiguredDurationSeconds(null);
+    setRemainingSeconds(null);
   }, []);
 
   /** Actualiza el nombre en el borrador actual. */
@@ -221,9 +270,7 @@ export function useSequencer() {
   const updateStepPictogram = useCallback((stepId: string, pictogram: Pictogram) => {
     setDraft((prev) => ({
       ...prev,
-      steps: prev.steps.map((step) =>
-        step.id === stepId ? { ...step, pictogram } : step
-      )
+      steps: prev.steps.map((step) => (step.id === stepId ? { ...step, pictogram } : step))
     }));
   }, []);
 
@@ -294,8 +341,7 @@ export function useSequencer() {
 
       const normalizedTarget = cleanName.toLowerCase();
       const duplicate = savedSequences.find(
-        (seq) =>
-          seq.name.trim().toLowerCase() === normalizedTarget && seq.id !== draft.savedId
+        (seq) => seq.name.trim().toLowerCase() === normalizedTarget && seq.id !== draft.savedId
       );
 
       if (duplicate) {
@@ -347,9 +393,14 @@ export function useSequencer() {
     [draft, savedSequences]
   );
 
-  /** Carga una secuencia guardada en el editor (y opcionalmente inicia su ejecución). */
+  /** Carga una secuencia guardada en el editor (y opcionalmente inicia su ejecución con o sin límite de tiempo). */
   const loadSavedSequence = useCallback(
-    (sequenceId: string, executeImmediately = false, resumeFromSavedStep = true) => {
+    (
+      sequenceId: string,
+      executeImmediately = false,
+      resumeFromSavedStep = true,
+      durationSeconds?: number | null
+    ) => {
       const target = savedSequences.find((seq) => seq.id === sequenceId);
       if (!target) {
         return;
@@ -370,12 +421,19 @@ export function useSequencer() {
           target.lastViewedStepIndex < target.steps.length
             ? target.lastViewedStepIndex
             : 0;
+        const cleanDuration = sanitizeDurationSeconds(durationSeconds);
         setCurrentStepIndex(resumeIndex);
         setIsCompleted(false);
+        setCompletionReason(null);
+        setConfiguredDurationSeconds(cleanDuration);
+        setRemainingSeconds(cleanDuration);
         setIsPlaying(true);
       } else {
         setIsPlaying(false);
         setIsCompleted(false);
+        setCompletionReason(null);
+        setConfiguredDurationSeconds(null);
+        setRemainingSeconds(null);
       }
     },
     [savedSequences]
@@ -384,18 +442,16 @@ export function useSequencer() {
   /** Elimina una secuencia de la lista de guardadas. */
   const deleteSavedSequence = useCallback((sequenceId: string) => {
     setSavedSequences((prev) => prev.filter((seq) => seq.id !== sequenceId));
-    setDraft((prev) =>
-      prev.savedId === sequenceId ? { ...prev, savedId: null } : prev
-    );
+    setDraft((prev) => (prev.savedId === sequenceId ? { ...prev, savedId: null } : prev));
   }, []);
 
   /**
    * Inicia la ejecución paso a paso a pantalla completa (HU-08 / CU-07).
    * Permite empezar desde el principio (`startFromSavedStep = false`) o retomar
-   * desde el último paso visto (`startFromSavedStep = true`).
+   * desde el último paso visto (`startFromSavedStep = true`), con un tiempo límite opcional.
    */
   const startExecution = useCallback(
-    (startFromSavedStep = false) => {
+    (startFromSavedStep = false, durationSeconds?: number | null) => {
       if (draft.steps.length < 2) {
         return;
       }
@@ -408,8 +464,16 @@ export function useSequencer() {
           ? draft.lastViewedStepIndex
           : 0;
 
+      const nextDuration =
+        durationSeconds === undefined
+          ? configuredDurationSeconds
+          : sanitizeDurationSeconds(durationSeconds);
+
       setCurrentStepIndex(initialIndex);
       setIsCompleted(false);
+      setCompletionReason(null);
+      setConfiguredDurationSeconds(nextDuration);
+      setRemainingSeconds(nextDuration);
       setIsPlaying(true);
 
       setDraft((prev) => ({
@@ -418,7 +482,13 @@ export function useSequencer() {
       }));
       syncLastStepToSaved(draft.savedId, initialIndex);
     },
-    [draft.steps.length, draft.lastViewedStepIndex, draft.savedId, syncLastStepToSaved]
+    [
+      draft.steps.length,
+      draft.lastViewedStepIndex,
+      draft.savedId,
+      configuredDurationSeconds,
+      syncLastStepToSaved
+    ]
   );
 
   /** Avanza al siguiente paso o muestra la pantalla de cierre si era el último (CU-07 pasos 3-5). */
@@ -434,6 +504,7 @@ export function useSequencer() {
     } else {
       // Al completar el último paso, se muestra la pantalla de cierre y se limpia el paso pendiente
       setIsCompleted(true);
+      setCompletionReason("steps_completed");
       setDraft((prev) => ({
         ...prev,
         lastViewedStepIndex: null
@@ -445,8 +516,13 @@ export function useSequencer() {
   /** Vuelve al paso anterior (CU-07 flujo alternativo 3a). */
   const prevStep = useCallback(() => {
     if (isCompleted) {
+      // Si se llegó a la pantalla de fin porque se agotó el tiempo, no retroceder con tiempo en 0
+      if (completionReason === "time_expired") {
+        return;
+      }
       const lastIdx = Math.max(0, draft.steps.length - 1);
       setIsCompleted(false);
+      setCompletionReason(null);
       setCurrentStepIndex(lastIdx);
       setDraft((prev) => ({
         ...prev,
@@ -465,7 +541,14 @@ export function useSequencer() {
       }));
       syncLastStepToSaved(draft.savedId, prevIdx);
     }
-  }, [isCompleted, currentStepIndex, draft.steps.length, draft.savedId, syncLastStepToSaved]);
+  }, [
+    isCompleted,
+    completionReason,
+    currentStepIndex,
+    draft.steps.length,
+    draft.savedId,
+    syncLastStepToSaved
+  ]);
 
   /**
    * Sale de la pantalla de ejecución.
@@ -481,6 +564,9 @@ export function useSequencer() {
     }
     setIsPlaying(false);
     setIsCompleted(false);
+    setCompletionReason(null);
+    setConfiguredDurationSeconds(null);
+    setRemainingSeconds(null);
   }, [isCompleted, currentStepIndex, draft.savedId, syncLastStepToSaved]);
 
   const canExecute = draft.steps.length >= 2;
@@ -497,6 +583,9 @@ export function useSequencer() {
     isPlaying,
     currentStepIndex,
     isCompleted,
+    completionReason,
+    configuredDurationSeconds,
+    remainingSeconds,
     startNewSequence,
     setDraftName,
     addStep,
@@ -513,4 +602,3 @@ export function useSequencer() {
     exitExecution
   };
 }
-
