@@ -114,10 +114,9 @@ export default function SequenceTimerSetupModal({
           <button
             type="button"
             onClick={onClose}
-            aria-label="Cerrar ventana"
-            className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border-2 border-slate-200 bg-white text-lg font-extrabold text-slate-700 transition hover:bg-slate-100 focus:outline-none focus-visible:ring-4 focus-visible:ring-violet-300"
+            className="min-h-[48px] shrink-0 rounded-2xl border-2 border-slate-300 bg-white px-4 py-2 text-base font-semibold text-slate-800 transition hover:bg-slate-100 focus:outline-none focus-visible:ring-4 focus-visible:ring-violet-300"
           >
-            ✕
+            Cerrar
           </button>
         </div>
 
