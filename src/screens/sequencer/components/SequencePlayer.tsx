@@ -220,13 +220,24 @@ export default function SequencePlayer({
             }`}
           >
             <div
-              className={`flex h-16 w-16 shrink-0 items-center justify-center rounded-full text-3xl font-extrabold sm:h-24 sm:w-24 sm:text-5xl ${
+              className={`flex h-16 w-16 shrink-0 items-center justify-center rounded-full text-3xl font-extrabold leading-none sm:h-24 sm:w-24 sm:text-5xl ${
                 isTimeExpired
                   ? "bg-amber-100 text-amber-800"
                   : "bg-emerald-100 text-emerald-700"
               }`}
             >
-              {isTimeExpired ? "⏰" : "✓"}
+              {isTimeExpired ? (
+                <span
+                  aria-hidden="true"
+                  className="inline-block -translate-y-[3px] leading-none select-none sm:-translate-y-[4.5px]"
+                >
+                  ⏰
+                </span>
+              ) : (
+                <span aria-hidden="true" className="inline-block leading-none select-none">
+                  ✓
+                </span>
+              )}
             </div>
 
             <h3 className="text-2xl font-extrabold text-slate-900 sm:text-4xl">
