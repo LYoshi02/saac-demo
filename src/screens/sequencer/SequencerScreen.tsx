@@ -316,8 +316,6 @@ export default function SequencerScreen({ onBack }: SequencerScreenProps) {
       <SequenceTimerSetupModal
         isOpen={pendingExecution !== null}
         sequenceName={pendingExecution?.sequenceName ?? draft.name}
-        isResuming={pendingExecution?.resumeFromSavedStep ?? false}
-        resumeStepNumber={pendingExecution?.resumeStepNumber ?? 1}
         onStartWithTime={(durationSeconds) =>
           handleStartConfirmedExecution(durationSeconds)
         }

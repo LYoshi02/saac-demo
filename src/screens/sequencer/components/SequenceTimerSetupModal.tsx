@@ -5,8 +5,6 @@ import { MAX_SEQUENCE_TIME_MINUTES, MAX_SEQUENCE_TIME_SECONDS } from "../types";
 export interface SequenceTimerSetupModalProps {
   isOpen: boolean;
   sequenceName: string;
-  isResuming: boolean;
-  resumeStepNumber: number;
   onStartWithTime: (durationSeconds: number) => void;
   onStartWithoutTime: () => void;
   onClose: () => void;
@@ -19,8 +17,6 @@ export interface SequenceTimerSetupModalProps {
 export default function SequenceTimerSetupModal({
   isOpen,
   sequenceName,
-  isResuming,
-  resumeStepNumber,
   onStartWithTime,
   onStartWithoutTime,
   onClose
@@ -105,19 +101,12 @@ export default function SequenceTimerSetupModal({
       >
         {/* Encabezado */}
         <div className="flex items-start justify-between gap-4 border-b border-slate-200 pb-4">
-          <div>
-            {isResuming && (
-              <span className="mb-1.5 inline-block rounded-full bg-violet-100 px-3 py-1 text-xs font-extrabold text-violet-900">
-                Retomando desde el paso {resumeStepNumber}
-              </span>
-            )}
-            <h2
-              id="sequence-timer-modal-title"
-              className="text-2xl font-extrabold text-slate-900"
-            >
-              ¿Querés definir un tiempo para «{displayName}»?
-            </h2>
-          </div>
+          <h2
+            id="sequence-timer-modal-title"
+            className="text-2xl font-extrabold text-slate-900"
+          >
+            ¿Querés definir un tiempo para «{displayName}»?
+          </h2>
 
           <button
             type="button"
