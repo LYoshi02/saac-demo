@@ -355,18 +355,6 @@ export default function TimerScreen({ onBack }: TimerScreenProps) {
           >
             Iniciar cronómetro
           </button>
-          <p className="mt-2 text-center text-sm text-slate-700">
-            Pictogramas de{" "}
-            <a
-              href="https://arasaac.org"
-              target="_blank"
-              rel="noreferrer"
-              className="font-semibold underline focus:outline-none focus-visible:ring-4 focus-visible:ring-sky-300"
-            >
-              ARASAAC
-            </a>
-            {" — Gobierno de Aragón, licencia CC BY-NC-SA."}
-          </p>
           <PictogramPickerModal
             isOpen={isPickerOpen}
             onClose={() => setIsPickerOpen(false)}
@@ -468,18 +456,6 @@ export default function TimerScreen({ onBack }: TimerScreenProps) {
               </button>
             </div>
           )}
-          <p className="mt-2 text-center text-sm text-slate-700">
-            Pictogramas de{" "}
-            <a
-              href="https://arasaac.org"
-              target="_blank"
-              rel="noreferrer"
-              className="font-semibold underline focus:outline-none focus-visible:ring-4 focus-visible:ring-sky-300"
-            >
-              ARASAAC
-            </a>
-            {" — Gobierno de Aragón, licencia CC BY-NC-SA."}
-          </p>
         </section>
       )}
     </ScreenLayout>
