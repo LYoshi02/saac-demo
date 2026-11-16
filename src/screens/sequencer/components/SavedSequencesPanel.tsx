@@ -28,7 +28,7 @@ export default function SavedSequencesPanel({
   return (
     <section
       aria-label="Secuencias guardadas"
-      className="flex flex-col gap-6 rounded-3xl border-2 border-slate-200 bg-white p-5 shadow-sm sm:p-7"
+      className="flex flex-col gap-6 rounded-3xl border-2 border-violet-200 bg-white p-5 shadow-sm sm:p-7"
     >
       {/* Encabezado con contador y botón principal para crear nueva secuencia */}
       <div className="flex flex-col gap-4 border-b border-slate-200 pb-5 sm:flex-row sm:items-center sm:justify-between">
