@@ -2,7 +2,7 @@
 
 Aplicación web diseñada para asistir a **terapeutas ocupacionales** y **familiares/cuidadores** en el acompañamiento de niños mediante apoyos visuales aumentativos y alternativos (pictogramas de **ARASAAC**).
 
-El sistema permite anticipar tiempos, estructurar la agenda diaria y guiar secuencias de pasos de forma visual, predecible y comprensible sin necesidad de que el niño sepa leer o interpretar números complejos.
+El sistema permite visualizar el tiempo, estructurar la agenda diaria y guiar secuencias de pasos de forma visual, predecible y comprensible sin necesidad de que el niño sepa leer o interpretar números complejos.
 
 ---
 
@@ -19,7 +19,7 @@ Toda la implementación está trazada con las especificaciones funcionales docum
 
 | Módulo | Color de acento | Historias de Usuario | Funcionalidades clave |
 | :--- | :---: | :---: | :--- |
-| **Cronómetro** (`timer`) | `sky` | **HU-01**, **HU-02**, **HU-03** | Configuración de duración (1 s a 60 min) con pictograma de actividad o genérico de tiempo; indicador visual continuo (anillo y barra de progreso que no tapan el pictograma); controles para pausar, reanudar y reiniciar; alerta visual de tiempo próximo a terminar; aviso sonoro con desbloqueo preventivo para iOS/Safari. |
+| **Cronómetro** (`timer`) | `sky` | **HU-01**, **HU-02** | Configuración de duración (1 s a 50 min) con pictograma de actividad o genérico de tiempo; anillo de progreso continuo que no tapa el pictograma; controles para pausar, reanudar y reiniciar; aviso sonoro con desbloqueo preventivo para iOS/Safari. |
 | **Organizador** (`organizer`) | `emerald` | **HU-04**, **HU-05**, **HU-06** | Gestión de agenda diaria con horarios y pictogramas; ordenamiento cronológico automático y aviso no bloqueante de horarios superpuestos; registro de actividades realizadas/pendientes; vista semanal y copia de actividades entre días. |
 | **Secuenciador** (`sequencer`) | `violet` | **HU-07**, **HU-08**, **HU-09** | Creación y edición de rutinas paso a paso con pictogramas reordenables; modo de ejecución a pantalla completa con controles táctiles grandes (*Anterior* / *Siguiente*), cronómetro opcional por paso y pantalla de felicitación al finalizar; biblioteca de secuencias guardadas y plantillas predefinidas. |
 | **Buscador de Pictogramas** (Transversal) | — | **HU-10**, **HU-11** | Búsqueda de pictogramas por palabra clave o categoría conectada a la API de **ARASAAC**, con caché local y catálogo *offline* de respaldo para garantizar disponibilidad sin conexión. |
@@ -81,7 +81,7 @@ saac-demo/
 │   │   └── arasaac/              # Cliente de API ARASAAC, caché, hooks de búsqueda y catálogo offline
 │   ├── screens/                  # Módulos independientes por pantalla
 │   │   ├── home/                 # Pantalla de inicio y selección de herramientas
-│   │   ├── timer/                # Módulo Cronómetro visual (HU-01 a HU-03)
+│   │   ├── timer/                # Módulo Cronómetro visual (HU-01 y HU-02)
 │   │   ├── organizer/            # Módulo Organizador / Agenda diaria y semanal (HU-04 a HU-06)
 │   │   └── sequencer/            # Módulo Secuenciador de rutinas paso a paso (HU-07 a HU-09)
 │   ├── App.tsx                   # Punto de entrada y navegación por estado
