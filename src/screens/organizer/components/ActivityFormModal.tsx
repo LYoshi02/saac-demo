@@ -12,8 +12,27 @@ export interface ActivityFormModalProps {
   onSave: (values: ActivityFormValues) => void;
 }
 
-const HOURS_24 = Array.from({ length: 24 }, (_, idx) => String(idx).padStart(2, "0"));
-const MINUTES_STEP_5 = Array.from({ length: 12 }, (_, idx) => String(idx * 5).padStart(2, "0"));
+function parseHourPart(value: string): number | null {
+  if (value.trim() === "") {
+    return null;
+  }
+  if (!/^\d+$/.test(value.trim())) {
+    return null;
+  }
+  const num = Number(value.trim());
+  return Number.isInteger(num) && num >= 0 && num <= 23 ? num : null;
+}
+
+function parseMinutePart(value: string): number | null {
+  if (value.trim() === "") {
+    return null;
+  }
+  if (!/^\d+$/.test(value.trim())) {
+    return null;
+  }
+  const num = Number(value.trim());
+  return Number.isInteger(num) && num >= 0 && num <= 59 ? num : null;
+}
 
 /**
  * Diálogo modal accesible para agregar una nueva actividad o editar una existente
@@ -28,10 +47,12 @@ export default function ActivityFormModal({
   onSave
 }: ActivityFormModalProps) {
   const modalTitleId = useId();
-  const timeInputId = useId();
+  const hourInputId = useId();
+  const minuteInputId = useId();
   const titleInputId = useId();
 
-  const [time, setTime] = useState<string>("00:00");
+  const [hourInput, setHourInput] = useState<string>("0");
+  const [minuteInput, setMinuteInput] = useState<string>("0");
   const [title, setTitle] = useState<string>("");
   const [pictogram, setPictogram] = useState<Pictogram | null>(null);
   const [isPickerOpen, setIsPickerOpen] = useState<boolean>(false);
@@ -43,11 +64,16 @@ export default function ActivityFormModal({
     }
 
     if (initialActivity) {
-      setTime(initialActivity.time);
+      const [initHour = "0", initMinute = "0"] = initialActivity.time.split(":");
+      const numHour = Number(initHour);
+      const numMinute = Number(initMinute);
+      setHourInput(Number.isNaN(numHour) ? "0" : String(numHour));
+      setMinuteInput(Number.isNaN(numMinute) ? "0" : String(numMinute));
       setTitle(initialActivity.title);
       setPictogram(initialActivity.pictogram);
     } else {
-      setTime("00:00");
+      setHourInput("0");
+      setMinuteInput("0");
       setTitle("");
       setPictogram(null);
     }
@@ -76,8 +102,17 @@ export default function ActivityFormModal({
     return null;
   }
 
-  const [currentHour = "00", currentMinute = "00"] = time.split(":");
-  const sameTimeActivities = getActivitiesAtSameTime(time, initialActivity?.id);
+  const parsedHour = parseHourPart(hourInput);
+  const parsedMinute = parseMinutePart(minuteInput);
+
+  const currentTime =
+    parsedHour !== null && parsedMinute !== null
+      ? `${String(parsedHour).padStart(2, "0")}:${String(parsedMinute).padStart(2, "0")}`
+      : null;
+
+  const sameTimeActivities = currentTime
+    ? getActivitiesAtSameTime(currentTime, initialActivity?.id)
+    : [];
 
   const handleSelectPictogram = (selected: Pictogram) => {
     // Si el nombre todavía está vacío al elegir pictograma, sugerir el nombre del pictograma
@@ -97,8 +132,13 @@ export default function ActivityFormModal({
       return;
     }
 
-    if (!time.trim()) {
-      setValidationError("Elegí un horario para la actividad.");
+    if (parsedHour === null) {
+      setValidationError("La hora tiene que ser un número entero entre 0 y 23.");
+      return;
+    }
+
+    if (parsedMinute === null) {
+      setValidationError("Los minutos tienen que ser un número entero entre 0 y 59.");
       return;
     }
 
@@ -109,7 +149,7 @@ export default function ActivityFormModal({
 
     const cleanTitle = title.trim() || pictogram.label;
     onSave({
-      time: time.trim(),
+      time: currentTime!,
       title: cleanTitle,
       pictogram
     });
@@ -173,68 +213,64 @@ export default function ActivityFormModal({
 
             {/* Paso 2: Horario de la actividad en formato 24 hs y aviso si se repite (HU-04 / CU-03 3a) */}
             <div className="flex flex-col gap-2">
-              <label htmlFor={timeInputId} className="text-base font-bold text-slate-800">
+              <span className="text-base font-bold text-slate-800">
                 2. Horario de la actividad (24 hs)
-              </label>
+              </span>
 
-              <div className="flex flex-wrap items-center gap-3">
-                <div className="inline-flex min-h-[52px] items-center gap-1 rounded-2xl border-2 border-slate-300 bg-white px-3 py-1.5 focus-within:border-emerald-600 focus-within:ring-4 focus-within:ring-emerald-300">
-                  <select
-                    id={timeInputId}
-                    aria-label="Hora (00 a 23)"
-                    value={currentHour}
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                <div className="flex flex-col gap-1.5">
+                  <label htmlFor={hourInputId} className="text-sm font-bold text-slate-800">
+                    Hora (0 a 23)
+                  </label>
+                  <input
+                    id={hourInputId}
+                    type="number"
+                    min={0}
+                    max={23}
+                    step={1}
+                    inputMode="numeric"
+                    placeholder="0"
+                    value={hourInput}
                     onChange={(event) => {
-                      setTime(`${event.target.value}:${currentMinute}`);
+                      setHourInput(event.target.value);
                       setValidationError(null);
                     }}
-                    className="cursor-pointer rounded-lg bg-transparent px-1.5 py-1 text-xl font-extrabold text-slate-900 focus:outline-none"
-                  >
-                    {HOURS_24.map((hour) => (
-                      <option key={hour} value={hour}>
-                        {hour}
-                      </option>
-                    ))}
-                  </select>
+                    className="min-h-[50px] w-full rounded-2xl border-2 border-slate-300 bg-white px-4 py-2 text-lg font-extrabold text-slate-900 placeholder:font-normal placeholder:text-slate-400 focus:border-emerald-600 focus:outline-none focus-visible:ring-4 focus-visible:ring-emerald-300"
+                  />
+                </div>
 
-                  <span
-                    aria-hidden="true"
-                    className="select-none text-xl font-extrabold text-slate-900"
-                  >
-                    :
-                  </span>
-
-                  <select
-                    aria-label="Minutos (de 5 en 5)"
-                    value={currentMinute}
+                <div className="flex flex-col gap-1.5">
+                  <label htmlFor={minuteInputId} className="text-sm font-bold text-slate-800">
+                    Minutos (0 a 59)
+                  </label>
+                  <input
+                    id={minuteInputId}
+                    type="number"
+                    min={0}
+                    max={59}
+                    step={1}
+                    inputMode="numeric"
+                    placeholder="0"
+                    value={minuteInput}
                     onChange={(event) => {
-                      setTime(`${currentHour}:${event.target.value}`);
+                      setMinuteInput(event.target.value);
                       setValidationError(null);
                     }}
-                    className="cursor-pointer rounded-lg bg-transparent px-1.5 py-1 text-xl font-extrabold text-slate-900 focus:outline-none"
-                  >
-                    {MINUTES_STEP_5.map((minute) => (
-                      <option key={minute} value={minute}>
-                        {minute}
-                      </option>
-                    ))}
-                  </select>
-
-                  <span className="ml-1 rounded-lg bg-slate-100 px-2 py-0.5 text-xs font-bold text-slate-600">
-                    hs
-                  </span>
+                    className="min-h-[50px] w-full rounded-2xl border-2 border-slate-300 bg-white px-4 py-2 text-lg font-extrabold text-slate-900 placeholder:font-normal placeholder:text-slate-400 focus:border-emerald-600 focus:outline-none focus-visible:ring-4 focus-visible:ring-emerald-300"
+                  />
                 </div>
               </div>
 
               {/* Aviso no bloqueante si otra actividad ya tiene la misma hora (HU-04 / CU-03 3a) */}
-              {sameTimeActivities.length > 0 && (
+              {currentTime && sameTimeActivities.length > 0 && (
                 <div
                   role="status"
                   className="mt-1 rounded-2xl border-2 border-amber-300 bg-amber-50 px-4 py-3 text-sm font-bold text-amber-950"
                 >
                   ⚠ Aviso: Ya tenés{" "}
                   {sameTimeActivities.length === 1
-                    ? `otra actividad agendada a las ${time} («${sameTimeActivities[0]?.title}»)`
-                    : `${sameTimeActivities.length} actividades agendadas a las ${time} (${sameTimeActivities.map((a) => `«${a.title}»`).join(", ")})`}
+                    ? `otra actividad agendada a las ${currentTime} («${sameTimeActivities[0]?.title}»)`
+                    : `${sameTimeActivities.length} actividades agendadas a las ${currentTime} (${sameTimeActivities.map((a) => `«${a.title}»`).join(", ")})`}
                   . Igual podés guardar esta actividad si querés mantenerlas en el mismo horario.
                 </div>
               )}
