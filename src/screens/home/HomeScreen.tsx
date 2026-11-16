@@ -23,21 +23,6 @@ export default function HomeScreen({ onSelect }: HomeScreenProps) {
           ))}
         </div>
       </main>
-
-      <footer className="border-t border-slate-200 bg-white">
-        <p className="mx-auto max-w-5xl px-6 py-4 text-sm text-slate-600">
-          Pictogramas:{" "}
-          <a
-            href="https://arasaac.org"
-            target="_blank"
-            rel="noreferrer"
-            className="font-medium text-slate-800 underline"
-          >
-            ARASAAC
-          </a>{" "}
-          (Gobierno de Aragón) – licencia CC BY-NC-SA.
-        </p>
-      </footer>
     </div>
   );
 }

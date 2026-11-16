@@ -1,0 +1,204 @@
+import { useEffect, useId, useState } from "react";
+import { unlockSequencerAudio } from "../soundAlert";
+import { MAX_SEQUENCE_TIME_MINUTES, MAX_SEQUENCE_TIME_SECONDS } from "../types";
+
+export interface SequenceTimerSetupModalProps {
+  isOpen: boolean;
+  sequenceName: string;
+  onStartWithTime: (durationSeconds: number) => void;
+  onStartWithoutTime: () => void;
+  onClose: () => void;
+}
+
+/**
+ * Modal previo al inicio de una secuencia que permite elegir de forma opcional
+ * el tiempo disponible para completarla (con un máximo de 50 minutos).
+ */
+export default function SequenceTimerSetupModal({
+  isOpen,
+  sequenceName,
+  onStartWithTime,
+  onStartWithoutTime,
+  onClose
+}: SequenceTimerSetupModalProps) {
+  const minutesInputId = useId();
+  const secondsInputId = useId();
+
+  const [minutesInput, setMinutesInput] = useState<string>("");
+  const [secondsInput, setSecondsInput] = useState<string>("");
+
+  useEffect(() => {
+    if (!isOpen) {
+      return;
+    }
+
+    setMinutesInput("");
+    setSecondsInput("");
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        onClose();
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [isOpen, onClose]);
+
+  if (!isOpen) {
+    return null;
+  }
+
+  const hasMinutes = minutesInput.trim() !== "";
+  const hasSeconds = secondsInput.trim() !== "";
+
+  const parsedMinutes = !hasMinutes ? 0 : Number.parseInt(minutesInput, 10);
+  const parsedSeconds = !hasSeconds ? 0 : Number.parseInt(secondsInput, 10);
+
+  const safeMinutes = Number.isNaN(parsedMinutes) ? -1 : parsedMinutes;
+  const safeSeconds = Number.isNaN(parsedSeconds) ? -1 : parsedSeconds;
+
+  const totalSeconds =
+    safeMinutes >= 0 && safeSeconds >= 0 ? safeMinutes * 60 + safeSeconds : -1;
+
+  let validationError: string | null = null;
+  if (safeMinutes < 0 || safeSeconds < 0) {
+    validationError = "Ingresá un valor numérico válido en minutos y segundos.";
+  } else if (safeSeconds > 59) {
+    validationError = "Los segundos deben estar entre 0 y 59.";
+  } else if (totalSeconds > MAX_SEQUENCE_TIME_SECONDS) {
+    validationError = `El tiempo máximo disponible es de ${MAX_SEQUENCE_TIME_MINUTES} minutos.`;
+  }
+
+  const handleStart = () => {
+    if (validationError) {
+      return;
+    }
+
+    if (totalSeconds > 0) {
+      unlockSequencerAudio();
+      onStartWithTime(totalSeconds);
+    } else {
+      onStartWithoutTime();
+    }
+  };
+
+  const displayName = sequenceName.trim() || "Secuencia de pasos";
+
+  return (
+    <div
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="sequence-timer-modal-title"
+      onClick={onClose}
+      className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 p-4 backdrop-blur-xs"
+    >
+      <div
+        onClick={(event) => event.stopPropagation()}
+        className="flex max-h-[92vh] w-full max-w-xl flex-col gap-5 overflow-y-auto rounded-3xl border-2 border-violet-200 bg-white p-5 shadow-xl sm:p-7"
+      >
+        {/* Encabezado */}
+        <div className="flex items-start justify-between gap-4 border-b border-slate-200 pb-4">
+          <h2
+            id="sequence-timer-modal-title"
+            className="text-2xl font-extrabold text-slate-900"
+          >
+            ¿Querés definir un tiempo para «{displayName}»?
+          </h2>
+
+          <button
+            type="button"
+            onClick={onClose}
+            className="min-h-[48px] shrink-0 rounded-2xl border-2 border-slate-300 bg-white px-4 py-2 text-base font-semibold text-slate-800 transition hover:bg-slate-100 focus:outline-none focus-visible:ring-4 focus-visible:ring-violet-300"
+          >
+            Cerrar
+          </button>
+        </div>
+
+        {/* Configuración opcional de tiempo y botón único de inicio */}
+        <div className="flex flex-col gap-4 rounded-2xl border-2 border-violet-200 bg-violet-50/40 p-4 sm:p-5">
+          <div>
+            <h3 className="text-base font-extrabold text-slate-900">
+              Tiempo disponible (opcional)
+            </h3>
+            <p className="text-xs font-medium text-slate-600">
+              Si dejás los campos vacíos, la secuencia iniciará sin límite de tiempo.
+            </p>
+          </div>
+
+          {/* Inputs manuales de minutos y segundos: 1 columna en móvil (ancho completo) y 2 columnas en pantallas medianas */}
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+            <div className="flex flex-col gap-1.5">
+              <label
+                htmlFor={minutesInputId}
+                className="text-sm font-bold text-slate-800"
+              >
+                Minutos (0 a {MAX_SEQUENCE_TIME_MINUTES})
+              </label>
+              <input
+                id={minutesInputId}
+                type="number"
+                min={0}
+                max={MAX_SEQUENCE_TIME_MINUTES}
+                inputMode="numeric"
+                placeholder="Sin tiempo"
+                value={minutesInput}
+                onChange={(event) => setMinutesInput(event.target.value)}
+                className="min-h-[50px] w-full rounded-2xl border-2 border-slate-300 bg-white px-4 py-2 text-lg font-extrabold text-slate-900 placeholder:font-normal placeholder:text-slate-400 focus:border-violet-600 focus:outline-none focus-visible:ring-4 focus-visible:ring-violet-300"
+              />
+            </div>
+
+            <div className="flex flex-col gap-1.5">
+              <label
+                htmlFor={secondsInputId}
+                className="text-sm font-bold text-slate-800"
+              >
+                Segundos (0 a 59)
+              </label>
+              <input
+                id={secondsInputId}
+                type="number"
+                min={0}
+                max={59}
+                inputMode="numeric"
+                placeholder="Sin tiempo"
+                value={secondsInput}
+                onChange={(event) => setSecondsInput(event.target.value)}
+                className="min-h-[50px] w-full rounded-2xl border-2 border-slate-300 bg-white px-4 py-2 text-lg font-extrabold text-slate-900 placeholder:font-normal placeholder:text-slate-400 focus:border-violet-600 focus:outline-none focus-visible:ring-4 focus-visible:ring-violet-300"
+              />
+            </div>
+          </div>
+
+          {validationError && (
+            <div
+              role="alert"
+              className="rounded-2xl border-2 border-red-300 bg-red-50 px-4 py-2.5 text-sm font-bold text-red-900"
+            >
+              {validationError}
+            </div>
+          )}
+
+          <button
+            type="button"
+            onClick={handleStart}
+            disabled={Boolean(validationError)}
+            className="inline-flex min-h-[52px] w-full items-center justify-center gap-2 rounded-2xl bg-violet-600 px-6 py-3 text-base font-extrabold text-white shadow-md transition hover:bg-violet-700 focus:outline-none focus-visible:ring-4 focus-visible:ring-violet-300 disabled:cursor-not-allowed disabled:opacity-40"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 20 20"
+              fill="currentColor"
+              aria-hidden="true"
+              className="h-4 w-4 shrink-0"
+            >
+              <path d="M6.3 2.84A1.5 1.5 0 0 0 4 4.11v11.78a1.5 1.5 0 0 0 2.3 1.27l9.344-5.891a1.5 1.5 0 0 0 0-2.538L6.3 2.841Z" />
+            </svg>
+            <span>Iniciar</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}

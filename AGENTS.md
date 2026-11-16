@@ -45,7 +45,7 @@ saac-demo/
 │   │   └── ScreenLayout.tsx
 │   ├── screens/                  # Carpetas independientes por pantalla/módulo
 │   │   ├── home/                 # Pantalla de inicio (HomeScreen, FeatureCard, index.ts)
-│   │   ├── timer/                # Módulo Cronómetro (HU-01, HU-02, HU-03)
+│   │   ├── timer/                 # Módulo Cronómetro (HU-01, HU-02)
 │   │   ├── organizer/            # Módulo Organizador / Agenda (HU-04, HU-05, HU-06)
 │   │   └── sequencer/            # Módulo Secuenciador de rutinas (HU-07, HU-08, HU-09)
 │   ├── App.tsx                   # Punto de entrada de navegación por estado
@@ -67,7 +67,7 @@ Toda implementación debe respetar los criterios de aceptación documentados en 
 
 | Módulo | Carpeta | Historias de Usuario / Casos de Uso | Alcance Principal |
 |---|---|---|---|
-| **Cronómetro** (`sky`) | `src/screens/timer/` | **HU-01** (Must), **HU-02** (Must), **HU-03** (Should) / CU-01, CU-02 | Duración entre 1 s y 60 min; pictograma de actividad (o genérico de tiempo); indicador visual continuo (anillo o barra que se vacía sin cubrir el pictograma); pausar, reanudar y reiniciar; aviso visual configurable; aviso sonoro con plan B para bloqueo de audio en iOS/Safari ("Tocar para activar sonido"). |
+| **Cronómetro** (`sky`) | `src/screens/timer/` | **HU-01** (Must), **HU-02** (Must) / CU-01, CU-02 | Duración entre 1 s y 50 min; pictograma de actividad (o genérico de tiempo); anillo visual continuo que se vacía sin cubrir el pictograma; pausar, reanudar y reiniciar; aviso sonoro con plan B para bloqueo de audio en iOS/Safari ("Tocar para activar sonido"). |
 | **Organizador** (`emerald`) | `src/screens/organizer/` | **HU-04** (Must), **HU-05** (Should), **HU-06** (Could) / CU-03 a CU-05 | Alta, edición y baja (con confirmación) de actividades diarias con hora y pictograma; ordenamiento automático por hora; aviso no bloqueante si dos actividades comparten hora; marcar como realizada/pendiente; vista semanal y copia de día. |
 | **Secuenciador** (`violet`) | `src/screens/sequencer/` | **HU-07** (Must), **HU-08** (Must), **HU-09** (Could) / CU-06 a CU-08 | Creación de secuencias con pasos y pictogramas reordenables (mínimo 2 pasos para ejecutar); ejecución paso a paso a pantalla completa con botones grandes ("Siguiente" / "Anterior") y pantalla de cierre; conservación del último paso visto al salir; guardado y reutilización. |
 | **Buscador de Pictogramas** (Transversal) | `src/components/` (cuando se implemente) | **HU-10** (Must), **HU-11** (Could) / CU-09, CU-10 | Búsqueda offline en biblioteca local de pictogramas ARASAAC por palabra clave o categoría; generación opcional con IA (marcando atribución `"generado con IA"` y fallback sin conexión). |

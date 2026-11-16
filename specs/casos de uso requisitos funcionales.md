@@ -18,7 +18,7 @@
 | ID | Caso de uso | Requisito de historia de usuario | Prioridad (MoSCoW) |
 |---|---|---|---|
 | CU-01 | Configurar cronómetro | HU-01 | Must |
-| CU-02 | Ejecutar cronómetro con aviso | HU-02, HU-03 | Must / Should |
+| CU-02 | Ejecutar cronómetro | HU-02 | Must |
 | CU-03 | Gestionar agenda diaria | HU-04 | Must |
 | CU-04 | Registrar actividad realizada | HU-05 | Should |
 | CU-05 | Consultar agenda semanal y copiar día | HU-06 | Could |
@@ -46,22 +46,21 @@
 - 3a. El actor no elige pictograma: el sistema usa un pictograma genérico de "tiempo".
 
 **Excepciones**
-- 2a. La duración es cero o mayor a 60 minutos: el sistema muestra un mensaje y no permite iniciar.
+- 2a. La duración es cero o mayor a 50 minutos: el sistema muestra un mensaje y no permite iniciar.
 
 ---
 
-## CU-02: Ejecutar cronómetro con aviso
+## CU-02: Ejecutar cronómetro
 
 - **Actor principal:** Terapeuta ocupacional (o familiar).
-- **Actor secundario:** Sistema (sonido y aviso visual).
+- **Actor secundario:** Sistema (sonido).
 - **Precondiciones:** CU-01 completado.
 - **Postcondiciones:** el cronómetro llegó a cero o fue reiniciado.
 
 **Flujo principal**
 1. El actor presiona "Iniciar".
-2. El sistema muestra el pictograma de la actividad junto con un indicador visual del tiempo restante (anillo o barra que se vacía de forma continua mientras corre la cuenta).
-3. Cuando faltan pocos minutos (valor configurable), el sistema cambia el color del indicador y muestra un aviso visual con pictograma.
-4. Al llegar a cero, el sistema emite un aviso sonoro.
+2. El sistema muestra el pictograma de la actividad junto con un anillo que se vacía de forma continua mientras corre la cuenta.
+3. Al llegar a cero, el sistema emite un aviso sonoro.
 
 **Flujos alternativos**
 - 2a. El actor presiona "Pausar": el sistema detiene la cuenta y el indicador; "Reanudar" continúa desde el mismo punto.
@@ -69,8 +68,8 @@
 - 2c. El actor no eligió pictograma: el indicador se muestra igual, con una figura geométrica simple.
 
 **Excepciones**
-- 4a. En iPhone el audio está bloqueado: el sistema muestra "Tocar para activar sonido" antes de iniciar (plan B por el riesgo de Safari).
-- 4b. El navegador silencia la pestaña: el aviso visual y el indicador se mantienen.
+- 3a. En iPhone el audio está bloqueado: el sistema muestra "Tocar para activar sonido" antes de iniciar (plan B por el riesgo de Safari).
+- 3b. El navegador silencia la pestaña: el indicador sigue funcionando.
 
 **Criterios de diseño del indicador**
 - Se entiende sin leer números: el niño percibe cuánto tiempo queda solo con mirar la forma.
@@ -239,7 +238,6 @@
 |---|---|
 | HU-01 | CU-01 |
 | HU-02 | CU-02 |
-| HU-03 | CU-02 (flujo 3) |
 | HU-04 | CU-03 |
 | HU-05 | CU-04 |
 | HU-06 | CU-05 |

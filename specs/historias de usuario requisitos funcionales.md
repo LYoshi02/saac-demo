@@ -17,7 +17,6 @@
 |---|---|---|---|
 | HU-01 | Configurar cronómetro | Must | CU-01 |
 | HU-02 | Ejecutar cronómetro con indicador de tiempo y aviso sonoro | Must | CU-02 |
-| HU-03 | Recibir aviso visual de fin de tiempo | Should | CU-02 |
 | HU-04 | Gestionar agenda diaria | Must | CU-03 |
 | HU-05 | Registrar actividad realizada | Should | CU-04 |
 | HU-06 | Consultar agenda semanal y copiar día | Could | CU-05 |
@@ -37,7 +36,7 @@ Como **terapeuta ocupacional**, quiero configurar un cronómetro con duración y
 
 **Criterios de aceptación**
 - [ ] Puedo definir la duración en minutos y segundos.
-- [ ] La duración máxima es de 60 minutos; con cero o más de 60 el sistema muestra un mensaje y no permite iniciar.
+- [ ] La duración máxima es de 50 minutos; con cero o más de 50 el sistema muestra un mensaje y no permite iniciar.
 - [ ] Puedo elegir un pictograma de la biblioteca (HU-10); si no elijo ninguno, se usa un pictograma genérico de "tiempo".
 
 ### HU-02: Ejecutar cronómetro con indicador de tiempo y aviso sonoro (Must)
@@ -45,24 +44,15 @@ Como **terapeuta ocupacional**, quiero configurar un cronómetro con duración y
 Como **terapeuta ocupacional**, quiero ver el pictograma junto a un indicador visual del tiempo restante y escuchar un aviso al terminar, para que el niño perciba cuánto falta sin depender de leer números.
 
 **Criterios de aceptación**
-- [ ] Al iniciar, veo el pictograma junto a un anillo o barra que se vacía de forma continua.
+- [ ] Al iniciar, veo el pictograma junto a un anillo que se vacía de forma continua.
 - [ ] El indicador se mantiene visible durante toda la cuenta, sin tapar el pictograma.
 - [ ] Puedo pausar y reanudar; el indicador se detiene y continúa desde el mismo punto.
 - [ ] Puedo reiniciar; el indicador vuelve a estar completo.
 - [ ] Al llegar a cero, el sistema emite un aviso sonoro.
 - [ ] Si no hay pictograma elegido, el indicador se muestra igual con una figura geométrica simple.
 - [ ] En iPhone, si el audio está bloqueado, veo "Tocar para activar sonido" antes de iniciar (plan B por el riesgo de Safari).
-- [ ] Si el navegador silencia la pestaña, el indicador y el aviso visual siguen funcionando.
+- [ ] Si el navegador silencia la pestaña, el indicador visual sigue funcionando.
 - [ ] El indicador tiene contraste suficiente para distinguir el tiempo restante del transcurrido (WCAG AA).
-
-### HU-03: Recibir aviso visual de fin de tiempo (Should)
-
-Como **familiar**, quiero ver un aviso visual con pictograma cuando faltan pocos minutos, para anticipar el final de la actividad.
-
-**Criterios de aceptación**
-- [ ] El tiempo de aviso es configurable.
-- [ ] Al llegar a ese punto, el indicador cambia de color y aparece el aviso con pictograma.
-- [ ] El aviso visual no depende del sonido.
 
 ---
 
@@ -162,7 +152,6 @@ Como **terapeuta ocupacional**, quiero generar un pictograma con IA a partir de 
 |---|---|
 | HU-01 | CU-01 |
 | HU-02 | CU-02 |
-| HU-03 | CU-02 (flujo de aviso) |
 | HU-04 | CU-03 |
 | HU-05 | CU-04 |
 | HU-06 | CU-05 |
