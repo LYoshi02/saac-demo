@@ -5,7 +5,6 @@ interface TimerProgressProps {
   totalMs: number;
   remainingMs: number;
   pictogram: Pictogram;
-  isWarning: boolean;
 }
 
 function formatRemainingTime(milliseconds: number): string {
@@ -20,8 +19,7 @@ function formatRemainingTime(milliseconds: number): string {
 export default function TimerProgress({
   totalMs,
   remainingMs,
-  pictogram,
-  isWarning
+  pictogram
 }: TimerProgressProps) {
   const [imageFailed, setImageFailed] = useState(false);
   const progress = totalMs > 0 ? Math.max(0, Math.min(1, remainingMs / totalMs)) : 0;
@@ -69,9 +67,7 @@ export default function TimerProgress({
           strokeLinecap="round"
           strokeDasharray="515.22"
           strokeDashoffset={strokeOffset}
-          className={`transition-[stroke-dashoffset] duration-100 ${
-            isWarning ? "text-amber-600" : "text-sky-700"
-          }`}
+          className="text-sky-700 transition-[stroke-dashoffset] duration-100"
         />
       </svg>
       <div className="relative flex h-36 w-36 items-center justify-center rounded-full bg-white">

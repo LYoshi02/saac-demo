@@ -105,35 +105,3 @@ export async function playTimerTick(tickNumber: number): Promise<void> {
   oscillator.start(now);
   oscillator.stop(now + 0.04);
 }
-
-export async function playTimerWarningAlert(): Promise<void> {
-  const context = getTimerAudioContext();
-  if (context.state !== "running") {
-    await context.resume();
-  }
-  if (context.state !== "running") {
-    throw new Error("El navegador no permitió reproducir el aviso anticipado.");
-  }
-
-  const now = context.currentTime;
-  const notes = [
-    { frequency: 659.25, start: 0, duration: 0.14 },
-    { frequency: 587.33, start: 0.2, duration: 0.2 }
-  ];
-
-  for (const note of notes) {
-    const oscillator = context.createOscillator();
-    const gain = context.createGain();
-    const startAt = now + note.start;
-
-    oscillator.type = "sine";
-    oscillator.frequency.setValueAtTime(note.frequency, startAt);
-    gain.gain.setValueAtTime(0.0001, startAt);
-    gain.gain.exponentialRampToValueAtTime(0.07, startAt + 0.025);
-    gain.gain.exponentialRampToValueAtTime(0.0001, startAt + note.duration);
-    oscillator.connect(gain);
-    gain.connect(context.destination);
-    oscillator.start(startAt);
-    oscillator.stop(startAt + note.duration + 0.02);
-  }
-}

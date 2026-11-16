@@ -2,13 +2,11 @@ import { useEffect, useId, useRef, useState } from "react";
 import PictogramPickerModal from "../../components/pictogram-picker/PictogramPickerModal";
 import ScreenLayout from "../../components/ScreenLayout";
 import { getDefaultTimePictogram, type Pictogram } from "../../services/arasaac";
-import TimerRemainingBar from "./TimerRemainingBar";
 import TimerProgress from "./TimerProgress";
 import {
   activateTimerAudio,
   playTimerEndAlert,
-  playTimerTick,
-  playTimerWarningAlert
+  playTimerTick
 } from "./soundAlert";
 
 type TimerPhase = "setup" | "running" | "paused" | "finished";
@@ -42,17 +40,11 @@ interface TimerScreenProps {
 export default function TimerScreen({ onBack }: TimerScreenProps) {
   const minutesInputId = useId();
   const secondsInputId = useId();
-  const warningMinutesInputId = useId();
-  const warningSecondsInputId = useId();
   const pictogramPreviewId = useId();
   const durationErrorId = useId();
-  const warningErrorId = useId();
 
   const [minutesInput, setMinutesInput] = useState("");
   const [secondsInput, setSecondsInput] = useState("");
-  const [warningMinutesInput, setWarningMinutesInput] = useState("");
-  const [warningSecondsInput, setWarningSecondsInput] = useState("0");
-  const [warningEnabled, setWarningEnabled] = useState(false);
   const [selectedPictogram, setSelectedPictogram] = useState<Pictogram | null>(null);
   const [isPickerOpen, setIsPickerOpen] = useState(false);
   const [showValidation, setShowValidation] = useState(false);
@@ -67,7 +59,6 @@ export default function TimerScreen({ onBack }: TimerScreenProps) {
   const deadlineRef = useRef(0);
   const remainingRef = useRef(0);
   const alertPlayedRef = useRef(false);
-  const warningPlayedRef = useRef(false);
   const lastTickSecondRef = useRef(0);
   const tickNumberRef = useRef(0);
   const pictogram = selectedPictogram ?? getDefaultTimePictogram();
@@ -79,36 +70,16 @@ export default function TimerScreen({ onBack }: TimerScreenProps) {
 
   if (minutes === null || seconds === null) {
     durationError = "Ingresá minutos y segundos como números enteros de 0 o más.";
-  } else if (minutes > 60) {
-    durationError = "La duración máxima es de 60 minutos.";
+  } else if (minutes > 50) {
+    durationError = "La duración máxima es de 50 minutos.";
   } else if (seconds > 59) {
     durationError = "Los segundos tienen que estar entre 0 y 59.";
   } else {
     durationSeconds = minutes * 60 + seconds;
     if (durationSeconds < 1) {
       durationError = "La duración tiene que ser de al menos 1 segundo.";
-    } else if (durationSeconds > 60 * 60) {
-      durationError = "La duración máxima es de 60 minutos.";
-    }
-  }
-
-  const warningMinutes = parseTimePart(warningMinutesInput);
-  const warningSeconds = parseTimePart(warningSecondsInput);
-  let warningError: string | null = null;
-  let warningLeadSeconds: number | null = null;
-
-  if (warningEnabled) {
-    if (warningMinutes === null || warningSeconds === null) {
-      warningError = "Ingresá el aviso como minutos y segundos enteros.";
-    } else if (warningMinutes > 60 || warningSeconds > 59) {
-      warningError = "Usá hasta 60 minutos y entre 0 y 59 segundos para el aviso.";
-    } else {
-      warningLeadSeconds = warningMinutes * 60 + warningSeconds;
-      if (warningLeadSeconds < 1) {
-        warningError = "El aviso tiene que ser de al menos 1 segundo.";
-      } else if (durationSeconds === null || warningLeadSeconds >= durationSeconds) {
-        warningError = "El aviso tiene que ocurrir antes de que termine el cronómetro.";
-      }
+    } else if (durationSeconds > 50 * 60) {
+      durationError = "La duración máxima es de 50 minutos.";
     }
   }
 
@@ -125,24 +96,8 @@ export default function TimerScreen({ onBack }: TimerScreenProps) {
       const remainingSeconds = Math.ceil(nextRemainingMs / 1000);
       const tickDue = remainingSeconds < lastTickSecondRef.current;
       lastTickSecondRef.current = remainingSeconds;
-      const warningDue =
-        nextRemainingMs > 0 &&
-        warningEnabled &&
-        warningLeadSeconds !== null &&
-        nextRemainingMs <= warningLeadSeconds * 1000 &&
-        !warningPlayedRef.current;
 
-      if (warningDue) {
-        warningPlayedRef.current = true;
-        if (soundEnabled) {
-          void playTimerWarningAlert().catch(() => {
-            setAudioStatus("unavailable");
-            setAudioMessage(
-              "No se pudo reproducir el aviso anticipado. El aviso visual sigue disponible."
-            );
-          });
-        }
-      } else if (tickDue && soundEnabled && audioStatus === "enabled") {
+      if (tickDue && soundEnabled && audioStatus === "enabled") {
         tickNumberRef.current += 1;
         void playTimerTick(tickNumberRef.current).catch(() => {
           setAudioStatus("unavailable");
@@ -171,11 +126,11 @@ export default function TimerScreen({ onBack }: TimerScreenProps) {
     updateRemainingTime();
     const intervalId = window.setInterval(updateRemainingTime, TIMER_UPDATE_INTERVAL_MS);
     return () => window.clearInterval(intervalId);
-  }, [audioStatus, phase, soundEnabled, warningEnabled, warningLeadSeconds]);
+  }, [audioStatus, phase, soundEnabled]);
 
   const handleStart = () => {
     setShowValidation(true);
-    if (durationError || durationSeconds === null || warningError) {
+    if (durationError || durationSeconds === null) {
       return;
     }
 
@@ -186,7 +141,6 @@ export default function TimerScreen({ onBack }: TimerScreenProps) {
     remainingRef.current = durationSeconds * 1000;
     deadlineRef.current = performance.now() + remainingRef.current;
     alertPlayedRef.current = false;
-    warningPlayedRef.current = false;
     lastTickSecondRef.current = Math.ceil(remainingRef.current / 1000);
     tickNumberRef.current = 0;
     setRemainingMs(remainingRef.current);
@@ -220,7 +174,6 @@ export default function TimerScreen({ onBack }: TimerScreenProps) {
     remainingRef.current = durationSeconds * 1000;
     setRemainingMs(remainingRef.current);
     alertPlayedRef.current = false;
-    warningPlayedRef.current = false;
     lastTickSecondRef.current = Math.ceil(remainingRef.current / 1000);
     tickNumberRef.current = 0;
     setPhase("paused");
@@ -265,14 +218,7 @@ export default function TimerScreen({ onBack }: TimerScreenProps) {
     await handleActivateAudio();
   };
 
-  const isRunning = phase === "running";
   const totalDurationMs = (durationSeconds ?? 0) * 1000;
-  const warningIsActive =
-    isRunning &&
-    warningEnabled &&
-    warningLeadSeconds !== null &&
-    remainingMs > 0 &&
-    remainingMs <= warningLeadSeconds * 1000;
 
   return (
     <ScreenLayout title="Cronómetro" onBack={onBack}>
@@ -292,13 +238,13 @@ export default function TimerScreen({ onBack }: TimerScreenProps) {
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <div className="flex flex-col gap-2">
                 <label htmlFor={minutesInputId} className="font-semibold text-slate-800">
-                  Minutos (0 a 60)
+                  Minutos (0 a 50)
                 </label>
                 <input
                   id={minutesInputId}
                   type="number"
                   min={0}
-                  max={60}
+                  max={50}
                   step={1}
                   inputMode="numeric"
                   value={minutesInput}
@@ -332,7 +278,7 @@ export default function TimerScreen({ onBack }: TimerScreenProps) {
               </div>
             </div>
             <p className="text-sm text-slate-600">
-              La duración puede ser de 1 segundo a 60 minutos.
+              La duración puede ser de 1 segundo a 50 minutos.
             </p>
             {showValidation && durationError && (
               <p id={durationErrorId} role="alert" className="font-semibold text-red-800">
@@ -375,82 +321,6 @@ export default function TimerScreen({ onBack }: TimerScreenProps) {
               </div>
             </div>
           </section>
-
-          <fieldset className="flex flex-col gap-4 rounded-3xl border-2 border-sky-100 bg-sky-50/60 p-4 sm:p-5">
-            <legend className="px-1 text-lg font-bold text-slate-900">
-              Aviso visual anticipado
-            </legend>
-            <label className="flex min-h-[48px] items-center gap-3 font-semibold text-slate-800">
-              <input
-                type="checkbox"
-                checked={warningEnabled}
-                onChange={(event) => setWarningEnabled(event.target.checked)}
-                className="h-5 w-5 accent-sky-700 focus-visible:outline focus-visible:outline-4 focus-visible:outline-sky-300"
-              />
-              Avisarme cuando falte poco tiempo
-            </label>
-            {warningEnabled && (
-              <>
-                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                  <div className="flex flex-col gap-2">
-                    <label
-                      htmlFor={warningMinutesInputId}
-                      className="font-semibold text-slate-800"
-                    >
-                      Minutos de anticipación
-                    </label>
-                    <input
-                      id={warningMinutesInputId}
-                      type="number"
-                      min={0}
-                      max={60}
-                      step={1}
-                      inputMode="numeric"
-                      value={warningMinutesInput}
-                      onChange={(event) => setWarningMinutesInput(event.target.value)}
-                      aria-invalid={showValidation && Boolean(warningError)}
-                      aria-describedby={
-                        showValidation && warningError ? warningErrorId : undefined
-                      }
-                      className="min-h-[52px] rounded-2xl border-2 border-slate-300 bg-white px-4 py-3 text-lg font-bold text-slate-900 focus:border-sky-600 focus:outline-none focus-visible:ring-4 focus-visible:ring-sky-300"
-                    />
-                  </div>
-                  <div className="flex flex-col gap-2">
-                    <label
-                      htmlFor={warningSecondsInputId}
-                      className="font-semibold text-slate-800"
-                    >
-                      Segundos de anticipación
-                    </label>
-                    <input
-                      id={warningSecondsInputId}
-                      type="number"
-                      min={0}
-                      max={59}
-                      step={1}
-                      inputMode="numeric"
-                      value={warningSecondsInput}
-                      onChange={(event) => setWarningSecondsInput(event.target.value)}
-                      aria-invalid={showValidation && Boolean(warningError)}
-                      aria-describedby={
-                        showValidation && warningError ? warningErrorId : undefined
-                      }
-                      className="min-h-[52px] rounded-2xl border-2 border-slate-300 bg-white px-4 py-3 text-lg font-bold text-slate-900 focus:border-sky-600 focus:outline-none focus-visible:ring-4 focus-visible:ring-sky-300"
-                    />
-                  </div>
-                </div>
-                <p className="text-sm text-slate-700">
-                  El aviso cambia el color del indicador y muestra el pictograma. No depende
-                  del sonido.
-                </p>
-                {showValidation && warningError && (
-                  <p id={warningErrorId} role="alert" className="font-semibold text-red-800">
-                    {warningError}
-                  </p>
-                )}
-              </>
-            )}
-          </fieldset>
 
           <section
             aria-label="Configuración del sonido"
@@ -519,7 +389,6 @@ export default function TimerScreen({ onBack }: TimerScreenProps) {
             totalMs={totalDurationMs}
             remainingMs={remainingMs}
             pictogram={pictogram}
-            isWarning={warningIsActive}
           />
 
           <p
@@ -529,27 +398,6 @@ export default function TimerScreen({ onBack }: TimerScreenProps) {
           >
             {formatDuration(Math.ceil(remainingMs / 1000))}
           </p>
-
-          <TimerRemainingBar
-            totalMs={totalDurationMs}
-            remainingMs={remainingMs}
-            isWarning={warningIsActive}
-          />
-
-          {warningIsActive && (
-            <div
-              role="status"
-              aria-live="polite"
-              className="flex w-full items-center justify-center gap-3 rounded-2xl border-2 border-amber-500 bg-amber-50 p-4 text-amber-950"
-            >
-              <img
-                src={pictogram.imageUrl}
-                alt={pictogram.label}
-                className="h-14 w-14 object-contain"
-              />
-              <p className="text-lg font-bold">Dentro de poco termina esta actividad.</p>
-            </div>
-          )}
 
           {phase === "running" && (
             <div className="flex w-full flex-wrap justify-center gap-3">
