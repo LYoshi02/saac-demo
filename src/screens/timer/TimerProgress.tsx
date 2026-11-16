@@ -67,6 +67,7 @@ export default function TimerProgress({
           strokeLinecap="round"
           strokeDasharray="515.22"
           strokeDashoffset={strokeOffset}
+          transform="rotate(-90 100 100)"
           className="text-sky-700 transition-[stroke-dashoffset] duration-100"
         />
       </svg>

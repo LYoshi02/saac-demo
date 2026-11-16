@@ -305,7 +305,7 @@ export default function TimerScreen({ onBack }: TimerScreenProps) {
                 <button
                   type="button"
                   onClick={() => setIsPickerOpen(true)}
-                  className="min-h-[48px] rounded-2xl bg-sky-600 px-4 py-2 font-bold text-white transition hover:bg-sky-700 focus:outline-none focus-visible:ring-4 focus-visible:ring-sky-300"
+                  className="min-h-[48px] w-full rounded-2xl bg-sky-600 px-4 py-2 font-bold text-white transition hover:bg-sky-700 focus:outline-none focus-visible:ring-4 focus-visible:ring-sky-300 sm:w-auto"
                 >
                   {selectedPictogram ? "Cambiar pictograma" : "Elegir pictograma"}
                 </button>
@@ -313,7 +313,7 @@ export default function TimerScreen({ onBack }: TimerScreenProps) {
                   <button
                     type="button"
                     onClick={() => setSelectedPictogram(null)}
-                    className="min-h-[48px] rounded-2xl border-2 border-slate-300 bg-white px-4 py-2 font-semibold text-slate-800 transition hover:bg-slate-100 focus:outline-none focus-visible:ring-4 focus-visible:ring-slate-400"
+                    className="min-h-[48px] w-full rounded-2xl border-2 border-slate-300 bg-white px-4 py-2 font-semibold text-slate-800 transition hover:bg-slate-100 focus:outline-none focus-visible:ring-4 focus-visible:ring-slate-400 sm:w-auto"
                   >
                     Usar pictograma genérico
                   </button>
@@ -361,7 +361,6 @@ export default function TimerScreen({ onBack }: TimerScreenProps) {
             onSelect={setSelectedPictogram}
             selectedId={selectedPictogram?.id ?? null}
             accent="sky"
-            allowDefaultTimePictogram
           />
         </section>
       ) : (
