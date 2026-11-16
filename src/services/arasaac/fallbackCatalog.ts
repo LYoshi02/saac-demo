@@ -57,11 +57,11 @@ export const PICTOGRAM_CATEGORIES: PictogramCategory[] = [
  * configura el cronómetro sin elegir un pictograma específico.
  */
 export const DEFAULT_TIME_PICTOGRAM: Pictogram = {
-  id: 2549,
+  id: 11359,
   label: "Tiempo / Reloj",
   keywords: ["tiempo", "reloj", "hora", "minutos", "cronómetro"],
   categories: ["tiempo"],
-  imageUrl: buildStaticUrl(2549),
+  imageUrl: buildStaticUrl(11359),
   source: "arasaac"
 };
 
@@ -232,4 +232,3 @@ export const FALLBACK_PICTOGRAMS: Pictogram[] = [
 export function filterCatalogByCategory(categoryId: PictogramCategoryId): Pictogram[] {
   return FALLBACK_PICTOGRAMS.filter((item) => item.categories.includes(categoryId));
 }
-
